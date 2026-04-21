@@ -1758,33 +1758,50 @@ function init(){
   renderer.domElement.addEventListener('wheel',e=>{rad=Math.max(5,Math.min(28,rad+e.deltaY*.018));updateCam();},{passive:true});
 
   // ── TOUCH EVENTS ──
-  let tLast=null, tPinchD=null;
+  let tLast=null, tPinchD=null, tStartTime=0, tTotalMove=0;
+  // TAP_THRESHOLD: must move less than this to count as a tap (not a drag)
+  // Using 18px — generous enough for shaky fingers, strict enough to ignore orbiting
+  const TAP_THRESHOLD = 18;
+  const TAP_MAX_MS    = 300; // must lift within 300ms to count as tap
+
   renderer.domElement.addEventListener('touchstart',e=>{
     e.preventDefault();
     if(e.touches.length===1){
       const t=e.touches[0];
       tLast={x:t.clientX,y:t.clientY};
-      mdx=t.clientX; mdy=t.clientY; dragging=false;
+      mdx=t.clientX; mdy=t.clientY;
+      dragging=false;
+      tTotalMove=0;
+      tStartTime=Date.now();
       tPinchD=null;
     } else if(e.touches.length===2){
-      tPinchD=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      // Two fingers — definitely not a tap
+      dragging=true;
+      tPinchD=Math.hypot(
+        e.touches[0].clientX-e.touches[1].clientX,
+        e.touches[0].clientY-e.touches[1].clientY
+      );
     }
   },{passive:false});
 
   renderer.domElement.addEventListener('touchmove',e=>{
     e.preventDefault();
     if(e.touches.length===2 && tPinchD!==null){
-      // Pinch zoom
-      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      dragging=true;
+      const d=Math.hypot(
+        e.touches[0].clientX-e.touches[1].clientX,
+        e.touches[0].clientY-e.touches[1].clientY
+      );
       rad=Math.max(5,Math.min(28,rad-(d-tPinchD)*.04));
       tPinchD=d; updateCam(); return;
     }
     if(e.touches.length===1 && tLast){
       const t=e.touches[0];
       const dx=t.clientX-tLast.x, dy=t.clientY-tLast.y;
-      const totalDx=t.clientX-mdx, totalDy=t.clientY-mdy;
-      if(Math.abs(totalDx)>6||Math.abs(totalDy)>6) dragging=true;
-      if(dragging){
+      tTotalMove += Math.hypot(dx,dy);
+      // Only start orbiting once we've clearly moved — avoids accidental rotations
+      if(tTotalMove > TAP_THRESHOLD){
+        dragging=true;
         theta-=dx*.007;
         phi=Math.max(.08,Math.min(Math.PI/2.02,phi+dy*.007));
         updateCam();
@@ -1795,9 +1812,11 @@ function init(){
 
   renderer.domElement.addEventListener('touchend',e=>{
     e.preventDefault();
-    if(!dragging && e.changedTouches.length===1){
+    const elapsed = Date.now() - tStartTime;
+    // Only place if: not dragging, moved very little, and lifted quickly
+    const isTap = !dragging && tTotalMove < TAP_THRESHOLD && elapsed < TAP_MAX_MS;
+    if(isTap && e.changedTouches.length===1){
       const t=e.changedTouches[0];
-      // Tap to place
       if(WALL_IDS.has(sel.id)){
         const wp=getWallPos(t.clientX,t.clientY);
         if(wp) placeWall(wp.gx,wp.gy,wp.wall);
@@ -1806,7 +1825,7 @@ function init(){
         placeFloor(fp.gx,fp.gz);
       }
     }
-    dragging=false; tLast=null;
+    dragging=false; tLast=null; tTotalMove=0;
   },{passive:false});
 
   window.addEventListener('resize',()=>{
