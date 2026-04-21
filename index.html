@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Winston's House Builder</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#e8e0d0;--panel:#faf7f2;--border:#c4b89e;
+  --text:#26201a;--muted:#7a6e60;--accent:#b86e30;--abg:#fceedd;
+  --bottom-h:0px; /* set by JS on mobile */
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
+h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
+.subtitle{font-size:10.5px;color:var(--muted)}
+.badge{background:var(--accent);color:#fff;font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;margin-left:auto}
+.workspace{display:flex;flex:1;overflow:hidden;min-height:0}
+
+/* ── DESKTOP SIDEBAR ── */
+.sidebar{width:180px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sec{padding:9px 11px;border-bottom:1px solid var(--border)}
+.slabel{font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:7px}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.pcard{background:var(--bg);border:1.5px solid var(--border);border-radius:7px;padding:6px 4px 5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .12s;user-select:none;touch-action:manipulation}
+.pcard:hover{border-color:var(--accent);background:var(--abg)}
+.pcard.on{border-color:var(--accent);background:var(--abg);box-shadow:0 0 0 2px rgba(184,110,48,.15)}
+.pcard span{font-size:9.5px;color:var(--text);text-align:center;font-weight:500}
+.pcard .tag{font-size:8px;color:var(--muted);font-family:'DM Mono',monospace}
+.abtn{width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:11.5px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .12s;margin-bottom:4px;touch-action:manipulation}
+.abtn:last-child{margin-bottom:0}
+.abtn:hover{background:var(--abg);border-color:var(--accent)}
+.abtn.danger:hover{background:#fde8e8;border-color:#c04040;color:#c04040}
+
+/* ── CANVAS ── */
+.canvas-area{flex:1;position:relative;overflow:hidden;min-width:0}
+#mount{width:100%;height:100%}
+.hintbar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(38,32,26,.8);color:#faf7f2;font-size:11px;padding:6px 14px;border-radius:14px;pointer-events:none;white-space:nowrap;z-index:10}
+.infobox{position:absolute;top:12px;left:12px;background:rgba(250,247,242,.93);border:1.5px solid var(--accent);border-radius:9px;padding:9px 12px;min-width:110px;z-index:10}
+.infobox .il{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.infobox .iv{font-size:13px;font-weight:500;color:var(--accent)}
+.infobox .id2{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:1px}
+.cambox{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:3px;align-items:center;z-index:10}
+.crow{display:flex;gap:3px}
+.cbtn{width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:rgba(250,247,242,.9);color:var(--text);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s;user-select:none;touch-action:manipulation}
+.cbtn:hover,.cbtn:active{background:var(--panel)}
+
+/* ── MOBILE BOTTOM PANEL ── */
+.mobile-bottom{display:none;flex-direction:column;background:var(--panel);border-top:1px solid var(--border);flex-shrink:0;z-index:20}
+.mob-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.mob-tabs::-webkit-scrollbar{display:none}
+.mob-tab{flex:1;min-width:64px;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border:none;background:transparent;color:var(--muted);font-size:9px;font-family:'DM Mono',monospace;letter-spacing:.04em;border-bottom:2px solid transparent;transition:all .12s;touch-action:manipulation;white-space:nowrap}
+.mob-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.mob-tab svg,.mob-tab .tab-icon{font-size:18px;line-height:1}
+.mob-panel{display:none;padding:10px;overflow-x:auto;overflow-y:hidden}
+.mob-panel.on{display:flex;gap:8px;align-items:flex-start}
+.mob-panel .pgrid{display:flex;flex-direction:row;gap:8px;flex-wrap:nowrap}
+.mob-pcard{background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 6px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:64px;flex-shrink:0;transition:all .12s;touch-action:manipulation}
+.mob-pcard.on{border-color:var(--accent);background:var(--abg);box-shadow:0 0 0 2px rgba(184,110,48,.15)}
+.mob-pcard span{font-size:9px;color:var(--text);text-align:center;font-weight:500;white-space:nowrap}
+.mob-actions{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border)}
+.mob-abtn{flex:1;padding:10px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;text-align:center;touch-action:manipulation;transition:all .12s}
+.mob-abtn:active{background:var(--abg);border-color:var(--accent)}
+.mob-abtn.danger:active{background:#fde8e8;border-color:#c04040;color:#c04040}
+.mob-abtn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:500}
+.mob-abtn.primary:active{opacity:.85}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .sidebar{display:none}
+  .subtitle{display:none}
+  .cambox{display:none}
+  /* Stack canvas above bottom panel */
+  body{flex-direction:column}
+  .workspace{flex-direction:column;flex:1;min-height:0}
+  .canvas-area{flex:1;min-height:0;width:100%}
+  .mobile-bottom{display:flex;flex-shrink:0}
+  .hintbar{bottom:8px;font-size:10px;padding:5px 11px}
+  .infobox{top:8px;left:8px;padding:7px 10px}
+  .infobox .iv{font-size:12px}
+}
+</style>
+</head>
+<body>
+<header>
+  <svg width="16" height="16" viewBox="0 0 16 16"><rect x="1" y="7" width="14" height="8" rx="1.5" fill="#c8944a"/><path d="M4 2L8 0.5L12 2V7H4Z" fill="#c8944a" stroke="#906030" stroke-width=".8"/></svg>
+  <h1>Winston's House Builder</h1>
+  <span class="subtitle">floor furniture · wall furniture · Winston explores it all</span>
+  <span class="badge" id="cnt">0 pieces</span>
+</header>
+
+<div class="workspace">
+  <div class="sidebar">
+
+    <div class="sec">
+      <div class="slabel">📦 Floor furniture</div>
+      <div id="pg-floor" class="pgrid"></div>
+    </div>
+
+    <div class="sec">
+      <div class="slabel">🧱 Wall furniture</div>
+      <div id="pg-wall" class="pgrid"></div>
+    </div>
+
+    <div class="sec">
+      <div class="slabel">🐱 Winston &amp; friends</div>
+      <button class="abtn" id="btn-winston" onclick="toggleCat('winston')" style="width:100%;justify-content:center;font-weight:500">Add Winston</button>
+      <button class="abtn" id="btn-griffey" onclick="toggleCat('griffey')" style="width:100%;justify-content:center;font-weight:500;margin-top:4px">Add Griffey</button>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6">Add one or both cats — they'll explore together.</div>
+    </div>
+
+    <div class="sec">
+      <div class="slabel">Edit</div>
+      <button class="abtn" onclick="undoLast()">↩ Undo</button>
+      <button class="abtn danger" onclick="clearAll()">✕ Clear all</button>
+    </div>
+
+    <div class="sec" style="flex:1">
+      <div class="slabel">Tips</div>
+      <div style="font-size:10.5px;color:var(--muted);line-height:1.75">
+        Hover over the <b>floor</b> or <b>back wall</b> to place.<br><br>
+        Boxes get tunnel holes when touching.<br><br>
+        Drag to orbit · Scroll to zoom
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MOBILE BOTTOM PANEL ── -->
+  <div class="mobile-bottom" id="mobile-bottom">
+    <div class="mob-tabs">
+      <button class="mob-tab on" id="mtab-floor" onclick="mobTab('floor')">
+        <span class="tab-icon">📦</span>FLOOR
+      </button>
+      <button class="mob-tab" id="mtab-wall" onclick="mobTab('wall')">
+        <span class="tab-icon">🧱</span>WALL
+      </button>
+      <button class="mob-tab" id="mtab-winston" onclick="mobTab('winston')">
+        <span class="tab-icon">🐱</span>FRIENDS
+      </button>
+      <button class="mob-tab" id="mtab-edit" onclick="mobTab('edit')">
+        <span class="tab-icon">✏️</span>EDIT
+      </button>
+    </div>
+    <div class="mob-panel on" id="mpanel-floor"></div>
+    <div class="mob-panel" id="mpanel-wall"></div>
+    <div class="mob-panel" id="mpanel-winston">
+      <div style="padding:4px 0;width:100%;display:flex;flex-direction:column;gap:6px">
+        <button class="mob-abtn primary" id="mob-btn-winston" onclick="toggleCat('winston')">🐱 Add Winston</button>
+        <button class="mob-abtn primary" id="mob-btn-griffey" onclick="toggleCat('griffey')">🐱 Add Griffey</button>
+      </div>
+    </div>
+    <div class="mob-panel" id="mpanel-edit">
+      <div style="display:flex;gap:8px;width:100%;padding:4px 0">
+        <button class="mob-abtn" onclick="undoLast()" style="flex:1">↩ Undo</button>
+        <button class="mob-abtn danger" onclick="clearAll()" style="flex:1">✕ Clear all</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-area">
+    <div id="mount"></div>
+    <div class="infobox">
+      <div class="il">Selected</div>
+      <div class="iv" id="sel-name">Large box</div>
+      <div class="id2" id="sel-tag">floor · 2×2×2</div>
+    </div>
+    <div class="cambox">
+      <div class="crow"><div class="cbtn" onclick="rc(0,-.14)">↑</div></div>
+      <div class="crow">
+        <div class="cbtn" onclick="rc(-.14,0)">←</div>
+        <div class="cbtn" onclick="rc(0,.14)">↓</div>
+        <div class="cbtn" onclick="rc(.14,0)">→</div>
+      </div>
+      <div class="crow" style="margin-top:2px">
+        <div class="cbtn" onclick="zc(-1.5)">+</div>
+        <div class="cbtn" onclick="zc(1.5)">−</div>
+      </div>
+    </div>
+    <div class="hintbar" id="hint">Select a piece and hover to preview</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════
+const ROOM   = 8;   // floor is ROOM×ROOM, walls are ROOM wide × WALL_H tall
+const WALL_H = 5;
+const CAT_FOOT = 0.23; // distance from cat group origin to bottom of paws (paws at y=-0.23 in local space)
+const UNIT   = 1;   // 1 grid unit = 1 Three.js unit
+
+// All pieces share the same unit scale so boxes and shelves look consistent
+const FLOOR_PIECES = [
+  {id:'f_lg',     name:'Large',   type:'floor', w:2, h:2,   d:2},
+  {id:'f_sm',     name:'Small',   type:'floor', w:1, h:1,   d:1},
+  {id:'f_wide',   name:'Wide',    type:'floor', w:3, h:1,   d:2},
+  {id:'f_tall',   name:'Tower',   type:'floor', w:1, h:3,   d:1},
+  {id:'f_tunnel', name:'Tunnel',  type:'floor', w:3, h:1,   d:1  },
+  {id:'f_plant',  name:'Cat grass',type:'floor',w:1, h:1.5, d:1},
+];
+const TUNNEL_IDS = new Set(['f_tunnel']);
+const PLANT_IDS  = new Set(['f_plant']);
+
+// Wall pieces: mounted on back wall (z=0 plane). w=wall-width, h=height, d=depth outward.
+const WALL_PIECES = [
+  {id:'w_shelf',   name:'Shelf',      type:'wall', w:2,   h:0.2, d:0.6},
+  {id:'w_wide',    name:'Wide shelf', type:'wall', w:3,   h:0.2, d:0.6},
+  {id:'w_box',     name:'Cat box',    type:'wall', w:1,   h:1,   d:1  },
+  {id:'w_post',    name:'Scratcher',  type:'wall', w:0.5, h:2,   d:0.5},
+  {id:'w_ladder',  name:'Bridge',     type:'wall', w:3,   h:0.5, d:0.5},
+  {id:'w_hammock', name:'Hammock',    type:'wall', w:1.2, h:1.2, d:1.2},
+];
+
+const BOX_IDS  = new Set(FLOOR_PIECES.map(p=>p.id));
+const WALL_IDS = new Set(WALL_PIECES.map(p=>p.id));
+
+// ═══════════════════════════════════════════════════════════
+// COLORS
+// ═══════════════════════════════════════════════════════════
+const C = {
+  cardFront:  0xd4a86a,
+  cardSide:   0xb88040,
+  cardTop:    0xe8c87a,
+  cardInner:  0xb07838,
+  cardEdge:   0x7a4c1c,
+  hole:       0x180c02,
+  wood:       0xd4a050,
+  woodDark:   0x8a5820,
+  rope:       0xb09060,
+  tunnelOuter:0x5a8a5a,  // dark green fabric tunnel
+  tunnelInner:0x1a2a1a,  // near-black interior
+  tunnelRing: 0x3a6a3a,
+  grassGreen: 0x4a9040,
+  grassLight: 0x7ab860,
+  potClay:    0xc07848,
+  potDark:    0x8a4828,
+  wallColor:  0xddd5c8,
+  floorColor: 0xc8bc98,
+  roomEdge:   0x5a5040,
+};
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let sel     = FLOOR_PIECES[1]; // default to Small box
+let placed  = [];      // {piece, gx, gy, gz, group, type:'floor'|'wall'}
+let ghost   = null;
+let ghostTarget = {x:0,y:0,z:0};
+
+// Per-cat state — Winston and Griffey share the same system
+function makeCatState(){
+  return {mesh:null, rig:null, T:0, phase:0, path:[], idx:0, pause:0, state:'idle', jump:null, active:false};
+}
+let cats = { winston: makeCatState(), griffey: makeCatState() };
+// Aliases so existing code still works
+let winston = null; // kept for legacy refs, always mirrors cats.winston.mesh
+let wT=0,wPhase=0,wPath=[],wIdx=0,wPause=0,wState='idle';
+
+let scene, camera, renderer;
+// Camera: isometric-ish angle to see floor + both walls
+let theta = -0.65, phi = 0.72, rad = 16;
+let dragging=false, mdx=0,mdy=0,lmx=0,lmy=0;
+
+const FLOOR_PLANE     = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+const BACK_WALL_PLANE = new THREE.Plane(new THREE.Vector3(0,0,1), 0);  // back wall z=0
+const LEFT_WALL_PLANE = new THREE.Plane(new THREE.Vector3(1,0,0), 0);  // left wall x=0
+// Which wall is targeted — detected by mouse position relative to walls
+let wallTarget = 'back'; // 'back' | 'left'
+
+// ═══════════════════════════════════════════════════════════
+// ADJACENCY (floor boxes only)
+// ═══════════════════════════════════════════════════════════
+function seg(a0,al,b0,bl){ return a0<b0+bl-0.05 && a0+al>b0+0.05; }
+
+function getAdj(item){
+  const {gx,gz,gy,piece:{w,h,d}} = item;
+  const a={px:false,nx:false,pz:false,nz:false};
+  for(const o of placed){
+    if(o===item||!BOX_IDS.has(o.piece.id)) continue;
+    const yOk = gy<o.gy+o.piece.h && gy+h>o.gy;
+    if(!yOk) continue;
+    if(Math.abs((gx+w)-o.gx)<.05 && seg(gz,d,o.gz,o.piece.d)) a.px=true;
+    if(Math.abs(gx-(o.gx+o.piece.w))<.05 && seg(gz,d,o.gz,o.piece.d)) a.nx=true;
+    if(Math.abs((gz+d)-o.gz)<.05 && seg(gx,w,o.gx,o.piece.w)) a.pz=true;
+    if(Math.abs(gz-(o.gz+o.piece.d))<.05 && seg(gx,w,o.gx,o.piece.w)) a.nz=true;
+  }
+  return a;
+}
+
+// ═══════════════════════════════════════════════════════════
+// FLOOR BOX BUILDER
+// Open-top box using BoxGeometry slabs — no ShapeGeometry,
+// no coplanar faces, no Z-fighting.
+// Holes are shown as a dark recessed cylinder inside the wall.
+// ═══════════════════════════════════════════════════════════
+function buildFloorBox(piece, adj, isGhost){
+  const g = new THREE.Group();
+  const {w,h,d} = piece;
+  const T = 0.05; // wall thickness
+
+  if(isGhost){
+    const geo = new THREE.BoxGeometry(w,h,d);
+    g.add(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:0xd4a86a,transparent:true,opacity:0.25})));
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({color:0xb86e30,transparent:true,opacity:0.7})));
+    return g;
+  }
+
+  const mFront = new THREE.MeshLambertMaterial({color:C.cardFront});
+  const mSide  = new THREE.MeshLambertMaterial({color:C.cardSide});
+  const mInner = new THREE.MeshLambertMaterial({color:C.cardInner});
+  const mFloor = new THREE.MeshLambertMaterial({color:C.cardInner});
+  const mHole  = new THREE.MeshLambertMaterial({color:C.hole});
+  const mEdge  = new THREE.MeshLambertMaterial({color:C.cardEdge});
+
+  // ── FLOOR SLAB ──
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(w, T, d), mFloor);
+  floor.position.y = -h/2 + T/2;
+  floor.receiveShadow = true; floor.castShadow = true;
+  g.add(floor);
+
+  // ── FOUR WALLS — solid BoxGeometry slabs ──
+  // Front wall (+Z)
+  const wFront = new THREE.Mesh(new THREE.BoxGeometry(w, h, T), mFront);
+  wFront.position.set(0, 0, d/2 - T/2); wFront.castShadow=true; g.add(wFront);
+  // Back wall (-Z)
+  const wBack = new THREE.Mesh(new THREE.BoxGeometry(w, h, T), mSide);
+  wBack.position.set(0, 0, -d/2 + T/2); wBack.castShadow=true; g.add(wBack);
+  // Right wall (+X)
+  const wRight = new THREE.Mesh(new THREE.BoxGeometry(T, h, d), mSide);
+  wRight.position.set(w/2 - T/2, 0, 0); wRight.castShadow=true; g.add(wRight);
+  // Left wall (-X)
+  const wLeft = new THREE.Mesh(new THREE.BoxGeometry(T, h, d), mSide);
+  wLeft.position.set(-w/2 + T/2, 0, 0); wLeft.castShadow=true; g.add(wLeft);
+
+  // ── INNER FACE PANELS — visible when looking down into box ──
+  // These sit just inside the walls and show the interior colour
+  const mI = new THREE.MeshLambertMaterial({color:C.cardInner, side:THREE.FrontSide});
+  // Front inner
+  const iFront = new THREE.Mesh(new THREE.PlaneGeometry(w - T*2, h), mI);
+  iFront.position.set(0, 0, d/2 - T - 0.001); iFront.rotation.y = Math.PI; g.add(iFront);
+  // Back inner
+  const iBack = new THREE.Mesh(new THREE.PlaneGeometry(w - T*2, h), mI);
+  iBack.position.set(0, 0, -d/2 + T + 0.001); g.add(iBack);
+  // Right inner
+  const iRight = new THREE.Mesh(new THREE.PlaneGeometry(d - T*2, h), mI);
+  iRight.position.set(w/2 - T - 0.001, 0, 0); iRight.rotation.y = -Math.PI/2; g.add(iRight);
+  // Left inner
+  const iLeft = new THREE.Mesh(new THREE.PlaneGeometry(d - T*2, h), mI);
+  iLeft.position.set(-w/2 + T + 0.001, 0, 0); iLeft.rotation.y = Math.PI/2; g.add(iLeft);
+
+  // ── TUNNEL HOLES — dark cylinder recessed into each connected wall ──
+  function addHole(axis, sign){
+    const fw = axis==='x' ? d : w;
+    const hR = Math.min(fw, h) * 0.34;
+    const hCY = -h/2 + hR*1.4;
+    // Dark hole cylinder (short, sits inside wall thickness)
+    const holeCyl = new THREE.Mesh(
+      new THREE.CylinderGeometry(hR, hR, T*3, 28),
+      mHole
+    );
+    holeCyl.rotation.x = Math.PI/2;
+    if(axis==='x'){
+      holeCyl.rotation.z = Math.PI/2;
+      holeCyl.position.set(sign*(w/2 - T/2), hCY, 0);
+    } else {
+      holeCyl.position.set(0, hCY, sign*(d/2 - T/2));
+    }
+    g.add(holeCyl);
+    // Cut visual: black circle on outer face
+    const outerDisc = new THREE.Mesh(new THREE.CircleGeometry(hR, 28), mHole);
+    outerDisc.rotation.y = axis==='x' ? -sign*Math.PI/2 : (sign>0?0:Math.PI);
+    outerDisc.position.set(
+      axis==='x' ? sign*(w/2+0.001) : 0,
+      hCY,
+      axis==='z' ? sign*(d/2+0.001) : 0
+    );
+    g.add(outerDisc);
+    // Ring around hole
+    const ring = new THREE.Mesh(new THREE.RingGeometry(hR, hR+0.03, 28), mEdge);
+    ring.rotation.y = axis==='x' ? -sign*Math.PI/2 : (sign>0?0:Math.PI);
+    ring.position.set(
+      axis==='x' ? sign*(w/2+0.002) : 0,
+      hCY,
+      axis==='z' ? sign*(d/2+0.002) : 0
+    );
+    g.add(ring);
+  }
+  if(adj.px) addHole('x',+1);
+  if(adj.nx) addHole('x',-1);
+  if(adj.pz) addHole('z',+1);
+  if(adj.nz) addHole('z',-1);
+
+  // ── RIM LINES ──
+  const rimM = new THREE.LineBasicMaterial({color:C.cardEdge, transparent:true, opacity:0.6});
+  const rim = [
+    new THREE.Vector3(-w/2,h/2,-d/2), new THREE.Vector3(w/2,h/2,-d/2),
+    new THREE.Vector3(w/2,h/2,d/2),   new THREE.Vector3(-w/2,h/2,d/2),
+    new THREE.Vector3(-w/2,h/2,-d/2)
+  ];
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(rim), rimM));
+
+  return g;
+}
+
+// ═══════════════════════════════════════════════════════════
+// WALL FURNITURE BUILDER
+// Mounted on back wall (z=0). Sticks out toward camera.
+// ═══════════════════════════════════════════════════════════
+function buildWallPiece(piece, isGhost){
+  const g = new THREE.Group();
+  const {w,h,d} = piece;
+  const op = isGhost ? 0.3 : 1;
+
+  const woodM = new THREE.MeshLambertMaterial({color:C.wood,transparent:op<1,opacity:op,side:THREE.DoubleSide});
+  const darkM = new THREE.MeshLambertMaterial({color:C.woodDark,transparent:op<1,opacity:op,side:THREE.DoubleSide});
+
+  if(piece.id==='w_shelf'||piece.id==='w_wide'){
+    // Flat plank
+    const plank=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),woodM);
+    plank.castShadow=true; plank.receiveShadow=true; g.add(plank);
+    // Two L-brackets underneath
+    if(!isGhost){
+      for(const bx of [-w/2+0.2, w/2-0.2]){
+        const bk=new THREE.Mesh(new THREE.BoxGeometry(0.08,h*4,0.08),darkM);
+        bk.position.set(bx,-h*1.5,-d/2+0.04); g.add(bk);
+        const bkh=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,d*.7),darkM);
+        bkh.position.set(bx,-h*2.5,-d/2+d*.35); g.add(bkh);
+      }
+    }
+    g.add(edges(new THREE.BoxGeometry(w,h,d)));
+  }
+  else if(piece.id==='w_box'){
+    // Wall-mounted cat box — wood panels, circular hole on front
+    const panM=new THREE.MeshLambertMaterial({color:C.wood,transparent:op<1,opacity:op});
+    // top/bottom/left/right panels
+    for(const [geo,pos] of [
+      [new THREE.BoxGeometry(w,h*.06,d),[0,h/2,0]],
+      [new THREE.BoxGeometry(w,h*.06,d),[0,-h/2,0]],
+      [new THREE.BoxGeometry(w*.04,h,d),[-w/2,0,0]],
+      [new THREE.BoxGeometry(w*.04,h,d),[w/2,0,0]],
+    ]){
+      const m=new THREE.Mesh(geo,panM); m.position.set(...pos); m.castShadow=true; g.add(m);
+    }
+    // Front face with hole
+    const hR=Math.min(w,h)*0.3;
+    const shape=new THREE.Shape();
+    shape.moveTo(-w/2,-h/2);shape.lineTo(w/2,-h/2);shape.lineTo(w/2,h/2);shape.lineTo(-w/2,h/2);shape.closePath();
+    const hp=new THREE.Path(); hp.absarc(0,0,hR,0,Math.PI*2,true); shape.holes.push(hp);
+    const front=new THREE.Mesh(new THREE.ShapeGeometry(shape,28),panM);
+    front.position.z=d/2; front.castShadow=true; g.add(front);
+    if(!isGhost){
+      const disc=new THREE.Mesh(new THREE.CircleGeometry(hR-.01,28),new THREE.MeshLambertMaterial({color:C.hole}));
+      disc.position.z=d/2-.04; g.add(disc);
+      const ring=new THREE.Mesh(new THREE.RingGeometry(hR,hR+.045,28),new THREE.MeshLambertMaterial({color:C.woodDark,side:THREE.DoubleSide,transparent:true,opacity:.9}));
+      ring.position.z=d/2+.01; g.add(ring);
+      // Wood grain lines on front
+      const gm=new THREE.LineBasicMaterial({color:C.woodDark,transparent:true,opacity:.18});
+      for(let i=0;i<5;i++){
+        const y=-h/2+(i+.5)*h/5;
+        g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-w/2+.06,y,d/2+.002),new THREE.Vector3(w/2-.06,y,d/2+.002)]),gm));
+      }
+    }
+    g.add(edges(new THREE.BoxGeometry(w,h,d)));
+  }
+  else if(piece.id==='w_post'){
+    // Scratching post — cylinder with rope wraps
+    const postM=new THREE.MeshLambertMaterial({color:C.rope,transparent:op<1,opacity:op});
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(w/2,w/2,h,12),postM);
+    post.castShadow=true; g.add(post);
+    if(!isGhost){
+      const rM=new THREE.MeshLambertMaterial({color:0xc8a870});
+      const n=Math.floor(h/0.2);
+      for(let i=0;i<n;i++){
+        const r=new THREE.Mesh(new THREE.TorusGeometry(w/2+.025,.028,6,14),rM);
+        r.rotation.x=Math.PI/2; r.position.y=-h/2+(i+.5)*h/n; g.add(r);
+      }
+    }
+    const br=new THREE.Mesh(new THREE.BoxGeometry(w*1.6,.08,.12),darkM);
+    br.position.set(0,-h/2,0); g.add(br);
+  }
+  else if(piece.id==='w_ladder'){
+    // Rope bridge: small wooden slats threaded on two parallel ropes,
+    // sagging in a catenary curve between two anchor points.
+    // Like the product image — horizontal bridge on the wall.
+    const slatM  = new THREE.MeshLambertMaterial({color:C.wood,    transparent:op<1,opacity:op});
+    const ropeM  = new THREE.MeshLambertMaterial({color:0xc8a850,  transparent:op<1,opacity:op});
+    const mountM = new THREE.MeshLambertMaterial({color:C.woodDark, transparent:op<1,opacity:op});
+
+    const bridgeW = w;       // total width of bridge along X
+    const slatCount = 10;    // number of wooden steps
+    const ropeSpacing = 0.18; // gap between the two ropes (front/back)
+    const sag = 0.22;        // how much bridge droops in middle
+
+    // Catenary curve: y = sag * (cosh(x/a)-1) approximated as parabola
+    function bridgeY(t){ return -sag * 4 * t * (1-t); } // t in [0,1], peaks at ends, dips in middle
+
+    // Two ropes — draw as thin cylinders between each slat
+    if(!isGhost){
+      for(let rope=0;rope<2;rope++){
+        const rz = (rope===0 ? -ropeSpacing/2 : ropeSpacing/2);
+        for(let i=0;i<slatCount;i++){
+          const t0 = i/slatCount, t1 = (i+1)/slatCount;
+          const x0 = (t0-0.5)*bridgeW, y0 = bridgeY(t0);
+          const x1 = (t1-0.5)*bridgeW, y1 = bridgeY(t1);
+          const mx=(x0+x1)/2, my=(y0+y1)/2;
+          const dx=x1-x0, dy=y1-y0;
+          const len=Math.sqrt(dx*dx+dy*dy);
+          const seg=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.015,len,5), ropeM);
+          seg.position.set(mx, my, rz);
+          seg.rotation.z = -Math.atan2(dy,dx) + Math.PI/2;
+          g.add(seg);
+        }
+      }
+    }
+
+    // Wooden slats — small flat planks across the bridge
+    for(let i=0;i<slatCount;i++){
+      const t = (i+0.5)/slatCount;
+      const sx = (t-0.5)*bridgeW;
+      const sy = bridgeY(t);
+      const slat = new THREE.Mesh(
+        new THREE.BoxGeometry(bridgeW/slatCount * 0.7, 0.04, ropeSpacing + 0.12),
+        slatM
+      );
+      slat.position.set(sx, sy, 0);
+      slat.castShadow=true;
+      g.add(slat);
+    }
+
+    // Wall anchor blocks at each end
+    if(!isGhost){
+      for(const side of [-1,1]){
+        const ax = side * bridgeW/2;
+        const anch = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.22, 0.18), mountM);
+        anch.position.set(ax, 0, -ropeSpacing*0.4);
+        g.add(anch);
+        // Screw
+        const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.025,6), mountM);
+        screw.rotation.x = Math.PI/2;
+        screw.position.set(ax, 0.04, -0.1);
+        g.add(screw);
+      }
+    }
+  }
+  else if(piece.id==='w_hammock'){
+    // Wall hammock: a thin circular wooden RIM (like a hoop/drum frame) mounted
+    // on the wall. Fabric hangs inside it forming a bowl. No torus — just a slim
+    // disc rim made from a cylinder, with fabric sagging inside.
+    const frameM  = new THREE.MeshLambertMaterial({color:C.wood,    transparent:op<1,opacity:op});
+    const fabricM = new THREE.MeshLambertMaterial({color:0xd4c8b8,  transparent:true, opacity:isGhost?0.28:0.92, side:THREE.DoubleSide});
+    const mountM  = new THREE.MeshLambertMaterial({color:C.woodDark, transparent:op<1,opacity:op});
+
+    const R = 0.55; // radius of hoop
+
+    // Rim: thin hollow cylinder — just the edge, like a drum rim
+    const outerR = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 0.06, 32, 1, false), frameM);
+    outerR.castShadow=true;
+    g.add(outerR);
+
+    // Top cap and bottom cap to close the cylinder edges
+    for(const sy of [0.03, -0.03]){
+      const cap = new THREE.Mesh(
+        new THREE.RingGeometry(R-0.07, R, 32),
+        new THREE.MeshLambertMaterial({color:C.wood, transparent:op<1, opacity:op, side:THREE.DoubleSide})
+      );
+      cap.rotation.x = Math.PI/2;
+      cap.position.y = sy;
+      g.add(cap);
+    }
+
+    // Fabric bowl inside — radial mesh sagging downward
+    if(!isGhost){
+      const segs=20, rings=5, sag=0.28;
+      const verts=[], tris=[];
+      verts.push(0,-sag,0); // centre
+      for(let r=1;r<=rings;r++){
+        const rr=(r/rings)*(R-0.07);
+        const ry2=-sag*(1-Math.pow(r/rings,2));
+        for(let s=0;s<segs;s++){
+          const a=(s/segs)*Math.PI*2;
+          verts.push(Math.cos(a)*rr, ry2, Math.sin(a)*rr);
+        }
+      }
+      for(let s=0;s<segs;s++) tris.push(0,1+s,1+(s+1)%segs);
+      for(let r=0;r<rings-1;r++){
+        for(let s=0;s<segs;s++){
+          const a=1+r*segs+s, b=1+r*segs+(s+1)%segs;
+          const c=1+(r+1)*segs+s, e=1+(r+1)*segs+(s+1)%segs;
+          tris.push(a,b,e,a,e,c);
+        }
+      }
+      const fg=new THREE.BufferGeometry();
+      fg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(verts),3));
+      fg.setIndex(tris);
+      fg.computeVertexNormals();
+      g.add(new THREE.Mesh(fg, fabricM));
+
+      // Two small wall-mount blocks on the back of the rim
+      for(const sx of [-R*0.6, R*0.6]){
+        const brk=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.1,0.14), mountM);
+        brk.position.set(sx, 0, -R*0.8);
+        g.add(brk);
+        const screw=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.02,6), mountM);
+        screw.rotation.x=Math.PI/2;
+        screw.position.set(sx,0,-R*0.85);
+        g.add(screw);
+      }
+    }
+  }
+
+  if(isGhost){
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w,h,d)),
+      new THREE.LineBasicMaterial({color:0xb86e30,transparent:true,opacity:.75})));
+  }
+  return g;
+}
+
+function edges(geo){
+  return new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:C.cardEdge,transparent:true,opacity:.45}));
+}
+
+// ═══════════════════════════════════════════════════════════
+// STACK HEIGHT
+// ═══════════════════════════════════════════════════════════
+function stackH(gx,gz,pw,pd){
+  let max=0;
+  for(const it of placed){
+    if(it.type!=='floor') continue;
+    const {piece:{w,h,d},gx:ox,gz:oz,gy} = it;
+    if(gx<ox+w&&gx+pw>ox&&gz<oz+d&&gz+pd>oz&&gy+h>max) max=gy+h;
+  }
+  return max;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TUNNEL BUILDER
+// A fabric cat tunnel — cylinder with open circular ends.
+// Runs along the Z axis (depth direction).
+// ═══════════════════════════════════════════════════════════
+function buildTunnel(piece, isGhost){
+  const g = new THREE.Group();
+  const {w,h,d} = piece;
+  const r = h/2;
+  const op = isGhost ? 0.30 : 1;
+  const col = isGhost ? 0x5a8a5a : C.tunnelOuter;
+
+  // Outer tube — open cylinder, DoubleSide so visible inside and out
+  const outerMat = new THREE.MeshLambertMaterial({
+    color: col, side: THREE.DoubleSide,
+    transparent: true, opacity: isGhost ? op : 0.95,
+  });
+  const outer = new THREE.Mesh(new THREE.CylinderGeometry(r, r, d, 20, 1, true), outerMat);
+  outer.rotation.x = Math.PI/2;
+  outer.castShadow = true;
+  g.add(outer);
+
+  if(!isGhost){
+    // Slightly smaller inner skin to show hollow depth — darker colour
+    const innerMat = new THREE.MeshLambertMaterial({color:C.tunnelInner, side:THREE.BackSide});
+    const inner = new THREE.Mesh(new THREE.CylinderGeometry(r*0.94, r*0.94, d, 20, 1, true), innerMat);
+    inner.rotation.x = Math.PI/2;
+    g.add(inner);
+
+    // Three coloured band stripes — thin cylinders slightly wider than tube
+    const bandMat = new THREE.MeshLambertMaterial({color:C.tunnelRing});
+    for(let i=0; i<3; i++){
+      const bz = -d/2 + (i+0.5)*(d/3);
+      const band = new THREE.Mesh(
+        new THREE.CylinderGeometry(r+0.04, r+0.04, 0.08, 20, 1, true),
+        bandMat
+      );
+      band.rotation.x = Math.PI/2;
+      band.position.z = bz;
+      g.add(band);
+    }
+  }
+
+  if(isGhost){
+    // Just edge lines for ghost
+    g.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.CylinderGeometry(r,r,d,12,1,true)),
+      new THREE.LineBasicMaterial({color:0x3a6a3a,transparent:true,opacity:.6})
+    ));
+  }
+
+  return g;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CAT GRASS PLANT BUILDER
+// Terracotta pot + upright grass blades. No torus/ring geometry.
+// ═══════════════════════════════════════════════════════════
+function buildPlant(piece, isGhost){
+  const g = new THREE.Group();
+  const op = isGhost ? 0.30 : 1;
+
+  if(isGhost){
+    const geo = new THREE.BoxGeometry(piece.w, piece.h, piece.d);
+    g.add(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:0x4a9040,transparent:true,opacity:op})));
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({color:0x2a6020,transparent:true,opacity:.6})));
+    return g;
+  }
+
+  const potH   = 0.45;
+  const potTopR= 0.30;
+  const potBotR= 0.20;
+  const baseY  = -piece.h/2;
+
+  // Pot body — tapered cylinder
+  const pot = new THREE.Mesh(
+    new THREE.CylinderGeometry(potTopR, potBotR, potH, 14),
+    new THREE.MeshLambertMaterial({color:C.potClay})
+  );
+  pot.position.y = baseY + potH/2;
+  pot.castShadow = true; pot.receiveShadow = true;
+  g.add(pot);
+
+  // Pot rim — thin wider cylinder on top (no torus)
+  const rim = new THREE.Mesh(
+    new THREE.CylinderGeometry(potTopR+0.04, potTopR, 0.06, 14),
+    new THREE.MeshLambertMaterial({color:C.potDark})
+  );
+  rim.position.y = baseY + potH;
+  g.add(rim);
+
+  // Soil — flat disc (CircleGeometry is fine, it's not a ring)
+  const soil = new THREE.Mesh(
+    new THREE.CircleGeometry(potTopR, 14),
+    new THREE.MeshLambertMaterial({color:0x2a1808})
+  );
+  soil.rotation.x = -Math.PI/2;
+  soil.position.y = baseY + potH + 0.01;
+  g.add(soil);
+
+  // Grass blades — each blade is a flat quad (PlaneGeometry) rotated to fan outward
+  // Fixed seed so they look the same every time (no Math.random flickering)
+  const bladeData = [
+    [0,     0.72, 0.10, 0.04],
+    [0.52,  0.60, 0.12, 0.05],
+    [1.05,  0.80, 0.08, 0.04],
+    [1.57,  0.65, 0.11, 0.05],
+    [2.09,  0.75, 0.09, 0.03],
+    [2.62,  0.55, 0.13, 0.06],
+    [3.14,  0.70, 0.10, 0.04],
+    [3.67,  0.62, 0.12, 0.05],
+    [4.19,  0.78, 0.08, 0.04],
+    [4.71,  0.68, 0.10, 0.05],
+    [5.24,  0.58, 0.11, 0.04],
+    [5.76,  0.74, 0.09, 0.03],
+  ]; // [angle, height, spread, width]
+
+  const bladeMatD = new THREE.MeshLambertMaterial({color:C.grassGreen, side:THREE.DoubleSide});
+  const bladeMatL = new THREE.MeshLambertMaterial({color:C.grassLight, side:THREE.DoubleSide});
+  const grassBase = baseY + potH + 0.02;
+
+  bladeData.forEach(([angle, bh, spread, bw], i)=>{
+    // Blade: a PlaneGeometry, narrow at top wide at base, then rotated
+    const bladeGeo = new THREE.PlaneGeometry(bw, bh);
+    const blade = new THREE.Mesh(bladeGeo, i%3===0 ? bladeMatL : bladeMatD);
+    // Pivot from bottom of blade
+    blade.geometry.translate(0, bh/2, 0);
+    const bx = Math.cos(angle)*spread;
+    const bz = Math.sin(angle)*spread;
+    blade.position.set(bx, grassBase, bz);
+    // Tilt outward from centre
+    blade.rotation.y = -angle;
+    blade.rotation.z = -(0.2 + spread*1.5); // lean outward
+    g.add(blade);
+  });
+
+  return g;
+}
+
+// ═══════════════════════════════════════════════════════════
+// REBUILD (updates hole adjacency on all floor boxes)
+// ═══════════════════════════════════════════════════════════
+function rebuild(){
+  for(const it of placed){
+    if(it.type!=='floor') continue;
+    if(TUNNEL_IDS.has(it.piece.id)||PLANT_IDS.has(it.piece.id)) continue; // no adjacency needed
+    scene.remove(it.group);
+    const g=buildFloorBox(it.piece,getAdj(it),false);
+    g.position.set(it.gx+it.piece.w/2, it.gy+it.piece.h/2, it.gz+it.piece.d/2);
+    scene.add(g); it.group=g;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// GHOST
+// ═══════════════════════════════════════════════════════════
+function clearGhost(){
+  if(ghost){scene.remove(ghost);ghost=null;}
+}
+
+function showFloorGhost(gx,gz){
+  clearGhost();
+  const p=sel;
+  if(gx<0||gz<0||gx+p.w>ROOM||gz+p.d>ROOM) return;
+  const gy=stackH(gx,gz,p.w,p.d);
+  if(TUNNEL_IDS.has(p.id))      ghost=buildTunnel(p,true);
+  else if(PLANT_IDS.has(p.id))  ghost=buildPlant(p,true);
+  else                           ghost=buildFloorBox(p,{px:false,nx:false,pz:false,nz:false},true);
+  ghost.position.set(gx+p.w/2, gy+p.h/2, gz+p.d/2);
+  ghostTarget={x:ghost.position.x,y:ghost.position.y,z:ghost.position.z};
+  scene.add(ghost);
+}
+
+function showWallGhost(gx,gy,wall){
+  clearGhost();
+  const p=sel;
+  if(gx<0||gy<0||gx+p.w>ROOM||gy+p.h>WALL_H) return;
+  ghost=buildWallPiece(p,true);
+  if(wall==='left'){
+    ghost.position.set(p.d/2, gy+p.h/2, gx+p.w/2);
+    ghost.rotation.y=Math.PI/2;
+  } else {
+    ghost.position.set(gx+p.w/2, gy+p.h/2, p.d/2);
+  }
+  ghostTarget={x:ghost.position.x,y:ghost.position.y,z:ghost.position.z};
+  scene.add(ghost);
+}
+
+// ═══════════════════════════════════════════════════════════
+// PLACE
+// ═══════════════════════════════════════════════════════════
+function placeFloor(gx,gz){
+  const p=sel;
+  if(gx<0||gz<0||gx+p.w>ROOM||gz+p.d>ROOM) return;
+  const gy=stackH(gx,gz,p.w,p.d);
+  let g;
+  if(TUNNEL_IDS.has(p.id))      g=buildTunnel(p,false);
+  else if(PLANT_IDS.has(p.id))  g=buildPlant(p,false);
+  else                           g=buildFloorBox(p,{px:false,nx:false,pz:false,nz:false},false);
+  g.position.set(gx+p.w/2,gy+p.h/2,gz+p.d/2);
+  scene.add(g);
+  placed.push({piece:p,gx,gz,gy,type:'floor',group:g});
+  rebuild();
+  popIn(g);
+  updateCount();
+  setHint(p.name+' placed!');
+}
+
+function placeWall(gx,gy,wall){
+  const p=sel;
+  if(gx<0||gy<0||gx+p.w>ROOM||gy+p.h>WALL_H) return;
+  const g=buildWallPiece(p,false);
+
+  // Compute where Winston should visit depending on piece type
+  // All wall pieces: group origin is at piece centre
+  // Back wall: group.position = (gx+w/2, gy+h/2, d/2)
+  // Left wall: group.position = (d/2, gy+h/2, gx+w/2), rotated Y 90deg
+
+  function visitCoords(wall){
+    // World position of piece centre
+    const worldCX = (wall==='left') ? p.d/2      : gx + p.w/2;
+    const worldCZ = (wall==='left') ? gx + p.w/2 : p.d/2;
+
+    // Top surface of piece in world Y
+    const surfaceY = gy + p.h;
+
+    // How far in front of the wall the cat should stand (Z for back wall, X for left)
+    // Piece sticks out p.d from wall. Cat stands at front face + small gap.
+    const frontGap = p.d + 0.1;
+
+    let vx = worldCX;
+    let vz = (wall==='left') ? worldCZ : frontGap;
+    if(wall==='left') vx = frontGap;
+    let vy, sc;
+
+    if(p.id==='w_hammock'){
+      // Inside bowl — gy is bottom of piece, bowl sags down by ~0.28
+      vy = gy + p.h/2 - 0.28 + CAT_FOOT;
+      sc = 0.75;
+      // Tag so tickCat gives long lounge time
+    } else if(p.id==='w_post'){
+      // In front of post at floor level closest to wall
+      vy = gy + CAT_FOOT;
+      sc = 0.8;
+    } else if(p.id==='w_ladder'){
+      // Middle of bridge at its lowest point (sag=0.22 below centre)
+      vy = gy + p.h/2 - 0.11 + CAT_FOOT;
+      sc = 0.8;
+    } else {
+      // Shelf / wide shelf / cat box / all others — stand on top surface
+      vy = surfaceY + CAT_FOOT;
+      sc = 0.85;
+    }
+    return {vx, vy, vz, sc};
+  }
+
+  const {vx,vy,vz,sc} = visitCoords(wall);
+
+  if(wall==='left'){
+    g.position.set(p.d/2, gy+p.h/2, gx+p.w/2);
+    g.rotation.y=Math.PI/2;
+    placed.push({piece:p,gx,gz:gx,gy,type:'wall',wall:'left',group:g,
+      visitX:vx, visitY:vy, visitZ:vz, visitSc:sc});
+  } else {
+    g.position.set(gx+p.w/2, gy+p.h/2, p.d/2);
+    placed.push({piece:p,gx,gz:0,gy,type:'wall',wall:'back',group:g,
+      visitX:vx, visitY:vy, visitZ:vz, visitSc:sc});
+  }
+  scene.add(g);
+  popIn(g);
+  updateCount();
+  setHint(p.name+' placed on '+(wall==='left'?'left':'back')+' wall!');
+}
+
+function popIn(g){
+  g.scale.setScalar(.01);
+  let t=0;
+  (function sp(){
+    t+=.07;
+    const s=Math.min(1,1-Math.cos(t*3)*Math.exp(-t*3));
+    g.scale.setScalar(Math.max(.01,s));
+    if(s<.999) requestAnimationFrame(sp); else g.scale.setScalar(1);
+  })();
+}
+
+function undoLast(){
+  const last=placed.pop();
+  if(last) scene.remove(last.group);
+  if(last?.type==='floor') rebuild();
+  updateCount();
+}
+
+function clearAll(){
+  placed.forEach(it=>scene.remove(it.group));
+  placed=[];
+  Object.values(cats).forEach(cat=>{
+    if(cat.mesh){scene.remove(cat.mesh);cat.mesh=null;}
+    cat.active=false; cat.rig=null;
+  });
+  winston=null; wRig=null;
+  updateCatButtons();
+  updateCount();
+}
+
+function updateCount(){
+  document.getElementById('cnt').textContent=placed.length+' pieces';
+}
+
+// ═══════════════════════════════════════════════════════════
+// WINSTON — rigged 3D cat with walk cycle animation
+//
+// Hierarchy:
+//   root (moves through world)
+//   └─ bodyPivot  (bobs up/down, squash+stretch)
+//      ├─ body mesh
+//      ├─ belly mesh
+//      ├─ neckPivot (subtle head bob)
+//      │  └─ head, ears, eyes, nose, snout, whiskers
+//      ├─ tailBase → tailMid → tailTip  (tail sway chain)
+//      ├─ frontLeftPivot  → upper → lower → paw
+//      ├─ frontRightPivot → upper → lower → paw
+//      ├─ backLeftPivot   → upper → lower → paw
+//      └─ backRightPivot  → upper → lower → paw
+// ═══════════════════════════════════════════════════════════
+
+let wRig = null; // winston's rig — kept for animateWinston compatibility
+
+function buildWinstonMesh(){
+  // ── TABBY TEXTURES ──
+  // Paint canvas textures so Winston has brown+black stripes and white belly
+  function stripeTexture(baseCol, stripeCol, stripeCount, w=64, h=64){
+    const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+    const c=cv.getContext('2d');
+    c.fillStyle=baseCol; c.fillRect(0,0,w,h);
+    // Bold irregular tabby stripes — vary width and position slightly
+    c.fillStyle=stripeCol;
+    for(let i=0;i<stripeCount;i++){
+      const y  = ((i+0.1)/(stripeCount)) * h;
+      const sw = h/(stripeCount*1.6);  // bolder stripes
+      // Slightly wavy edge for each stripe
+      for(let x=0;x<w;x++){
+        const wave = Math.sin(x/w*Math.PI*2)*2;
+        c.fillRect(x, y+wave, 1, sw);
+      }
+    }
+    const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
+  }
+  function solidTexture(col, w=4, h=4){
+    const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+    const c=cv.getContext('2d'); c.fillStyle=col; c.fillRect(0,0,w,h);
+    return new THREE.CanvasTexture(cv);
+  }
+
+  // Base fur: warm brown with dark brown/black stripes
+  // Winston's actual colours: dark grey-brown base, near-black bold stripes,
+  // white chest & muzzle, warm ginger-brown flank patch, pink nose, green eyes
+  const furTex   = stripeTexture('#4a4038','#18120c', 5);        // dark grey-brown + black stripes
+  const headTex  = stripeTexture('#4a4038','#18120c', 4, 64, 32); // same on head
+  const legTex   = stripeTexture('#3a3028','#18120c', 3, 32, 64); // legs slightly darker
+  const tailTex  = stripeTexture('#3a3028','#100c08', 5, 32, 64); // tail, more rings
+  const paleTex  = solidTexture('#f2f0ea'); // bright white chest & muzzle
+  const pinkTex  = solidTexture('#e8788a'); // pink nose
+  const blkTex   = solidTexture('#0c0808');
+  const grnTex   = solidTexture('#4a7838'); // warm green eyes like the photo
+  const whtTex   = solidTexture('#ffffff');
+
+  function mat(tex, extra={}){
+    return new THREE.MeshLambertMaterial({map:tex, ...extra});
+  }
+
+  const fur   = mat(furTex);
+  const furH  = mat(headTex);   // head (fewer stripes, different scale)
+  const furL  = mat(legTex);    // legs
+  const furT  = mat(tailTex);   // tail
+  const pale  = mat(paleTex);
+  const pink  = mat(pinkTex);
+  const blk   = mat(blkTex);
+  const grn   = mat(grnTex);
+  const wht   = mat(whtTex);
+
+  function mesh(geo,mat,cast=false){ const m=new THREE.Mesh(geo,mat); m.castShadow=cast; return m; }
+  function pivot(){ return new THREE.Group(); }
+
+  // ── ROOT ──
+  const root = new THREE.Group();
+
+  // ── BODY PIVOT — bobs during walk ──
+  const bodyPivot = pivot();
+  bodyPivot.position.y = 0.22; // body centre height from ground
+  root.add(bodyPivot);
+
+  const body = mesh(new THREE.SphereGeometry(0.22,12,8), fur, true);
+  body.scale.set(1.3, 0.9, 1.0);
+  bodyPivot.add(body);
+
+  const belly = mesh(new THREE.SphereGeometry(0.14,10,6), pale);
+  belly.scale.set(1.0, 0.85, 0.55);
+  belly.position.set(0, -0.02, 0.16);
+  bodyPivot.add(belly);
+
+  // ── NECK + HEAD PIVOT ──
+  const neckPivot = pivot();
+  neckPivot.position.set(0, 0.16, 0.14); // front-top of body
+  bodyPivot.add(neckPivot);
+
+  const head = mesh(new THREE.SphereGeometry(0.18,12,10), furH, true);
+  head.position.set(0, 0.10, 0.04);
+  neckPivot.add(head);
+
+  // ears on head
+  for(const s of [-1,1]){
+    const e = mesh(new THREE.ConeGeometry(0.065,0.14,6), furH);
+    e.position.set(s*0.10, 0.26, 0.02);
+    e.rotation.z = s*-0.22;
+    neckPivot.add(e);
+    const ei = mesh(new THREE.ConeGeometry(0.036,0.08,6), pink);
+    ei.position.set(s*0.10, 0.26, 0.04);
+    ei.rotation.z = s*-0.22;
+    neckPivot.add(ei);
+  }
+
+  // snout
+  const snout = mesh(new THREE.SphereGeometry(0.08,8,6), pale);
+  snout.scale.set(1.1, 0.72, 0.85);
+  snout.position.set(0, 0.06, 0.20);
+  neckPivot.add(snout);
+
+  // nose
+  const nose = mesh(new THREE.SphereGeometry(0.025,6,5), pink);
+  nose.position.set(0, 0.09, 0.275);
+  neckPivot.add(nose);
+
+  // eyes
+  for(const s of [-1,1]){
+    const ew = mesh(new THREE.SphereGeometry(0.045,8,6), wht);
+    ew.position.set(s*0.085, 0.14, 0.165);
+    neckPivot.add(ew);
+    const ir = mesh(new THREE.CircleGeometry(0.030,8), grn);
+    ir.position.set(s*0.085, 0.14, 0.208);
+    neckPivot.add(ir);
+    const pu = mesh(new THREE.CircleGeometry(0.018,6), blk);
+    pu.position.set(s*0.085, 0.14, 0.210);
+    neckPivot.add(pu);
+    const sh = mesh(new THREE.CircleGeometry(0.007,5), new THREE.MeshBasicMaterial({color:0xffffff}));
+    sh.position.set(s*0.085+0.012, 0.152, 0.211);
+    neckPivot.add(sh);
+  }
+
+  // whiskers
+  const wMat = new THREE.LineBasicMaterial({color:0xfff8f0,transparent:true,opacity:0.9});
+  [[-1,0.4],[-1,0],[-1,-0.3],[1,0.4],[1,0],[1,-0.3]].forEach(([s,vy])=>{
+    const pts=[new THREE.Vector3(s*0.08,0.065+vy*0.018,0.24),new THREE.Vector3(s*0.22,0.065+vy*0.03,0.22)];
+    neckPivot.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),wMat));
+  });
+
+  // ── TAIL — 3-segment chain for natural sway ──
+  const tailBase = pivot();
+  tailBase.position.set(0, 0.05, -0.22);
+  bodyPivot.add(tailBase);
+
+  const tb = mesh(new THREE.SphereGeometry(0.075,7,5), furT);
+  tailBase.add(tb);
+
+  const tailMid = pivot();
+  tailMid.position.set(0, 0.10, -0.06);
+  tailBase.add(tailMid);
+  const tm = mesh(new THREE.SphereGeometry(0.062,7,5), furT);
+  tailMid.add(tm);
+
+  const tailTip = pivot();
+  tailTip.position.set(0, 0.10, -0.02);
+  tailMid.add(tailTip);
+  const tt = mesh(new THREE.SphereGeometry(0.045,6,4), pale);
+  tailTip.add(tt);
+
+  // ── LEGS — pivot at hip/shoulder, upper+lower segments ──
+  // Each leg: hipPivot → upperLeg → kneePivot → lowerLeg → paw
+  function buildLeg(isFront, side){
+    const hp = pivot(); // hip/shoulder pivot
+    const zOff = isFront ?  0.14 : -0.14;
+    hp.position.set(side*0.16, -0.10, zOff);
+    bodyPivot.add(hp);
+
+    const upper = mesh(new THREE.CylinderGeometry(0.05,0.045,0.18,7), furL, true);
+    upper.position.y = -0.09;
+    hp.add(upper);
+
+    const kp = pivot(); // knee pivot
+    kp.position.y = -0.18;
+    hp.add(kp);
+
+    const lower = mesh(new THREE.CylinderGeometry(0.040,0.035,0.16,7), furL, true);
+    lower.position.y = -0.08;
+    kp.add(lower);
+
+    const paw = mesh(new THREE.SphereGeometry(0.055,7,5), pale, true);
+    paw.scale.set(1.1,0.5,1.35);
+    paw.position.set(0, -0.17, 0.03);
+    kp.add(paw);
+
+    return {hp, kp};
+  }
+
+  const legFL = buildLeg(true,  -1);
+  const legFR = buildLeg(true,   1);
+  const legBL = buildLeg(false, -1);
+  const legBR = buildLeg(false,  1);
+
+  // Expose rig — stored on root so tickCat can find it
+  const rig = { bodyPivot, neckPivot, tailBase, tailMid, tailTip,
+                legFL, legFR, legBL, legBR };
+  wRig = rig;      // keep global in sync for Winston
+  root._rig = rig; // also store on mesh for Griffey
+
+  return root;
+}
+
+// Animate the rig each frame based on walk state and phase
+function animateWinston(isWalking, phase){
+  if(!wRig) return;
+  const {bodyPivot, neckPivot, tailBase, tailMid, tailTip,
+         legFL, legFR, legBL, legBR} = wRig;
+
+  if(isWalking){
+    // Body bob — up/down at twice leg frequency
+    bodyPivot.position.y = 0.22 + Math.abs(Math.sin(phase*2)) * 0.03;
+    // Slight body roll side to side
+    bodyPivot.rotation.z = Math.sin(phase*2) * 0.06;
+    // Head bob — nods slightly forward on each step
+    neckPivot.rotation.x = Math.sin(phase*2) * 0.08 - 0.1;
+
+    // Walk cycle — diagonal gait: FL+BR swing together, FR+BL together
+    // Hip pivots forward/back, knee bends on swing phase
+    const swing = 0.45; // max hip swing angle
+    const knee  = 0.50; // max knee bend
+
+    // FL and BR are in phase, FR and BL are opposite
+    const phA =  Math.sin(phase); // positive = forward swing
+    const phB = -Math.sin(phase);
+
+    legFL.hp.rotation.x =  phA * swing;
+    legFL.kp.rotation.x = (phA > 0 ? phA : 0) * knee;
+
+    legBR.hp.rotation.x =  phA * swing * 0.9;
+    legBR.kp.rotation.x = (phA > 0 ? phA : 0) * knee * 0.8;
+
+    legFR.hp.rotation.x =  phB * swing;
+    legFR.kp.rotation.x = (phB > 0 ? phB : 0) * knee;
+
+    legBL.hp.rotation.x =  phB * swing * 0.9;
+    legBL.kp.rotation.x = (phB > 0 ? phB : 0) * knee * 0.8;
+
+    // Tail sways opposite to body roll, lags behind
+    tailBase.rotation.z = Math.sin(phase*2 - 0.4) * 0.35;
+    tailMid.rotation.z  = Math.sin(phase*2 - 0.7) * 0.30;
+    tailTip.rotation.z  = Math.sin(phase*2 - 1.0) * 0.25;
+    tailBase.rotation.x = 0.3; // held up during walk
+
+  } else {
+    // Idle — slow breathing/tail sway only
+    const breath = Math.sin(phase * 0.6) * 0.018;
+    bodyPivot.position.y = 0.22 + breath;
+    bodyPivot.scale.set(1, 1 + breath*1.5, 1);
+    neckPivot.rotation.x = -0.05 + Math.sin(phase*0.5)*0.04;
+
+    // Legs return to rest
+    for(const {hp,kp} of [legFL,legFR,legBL,legBR]){
+      hp.rotation.x += (0 - hp.rotation.x) * 0.12;
+      kp.rotation.x += (0.12 - kp.rotation.x) * 0.12;
+    }
+    // Tail sways lazily
+    tailBase.rotation.x = 0.5 + Math.sin(phase*0.4)*0.1;
+    tailBase.rotation.z = Math.sin(phase*0.7) * 0.25;
+    tailMid.rotation.z  = Math.sin(phase*0.7 - 0.3) * 0.20;
+    tailTip.rotation.z  = Math.sin(phase*0.7 - 0.6) * 0.18;
+  }
+}
+
+// Collect all visit points and sort them into a sensible traversal order:
+// floor pieces first (sorted by x/z), then wall pieces sorted by height (low→high)
+// so Winston walks the floor then "climbs" the wall furniture.
+function buildWinstonPath(){
+  const floorPts = [];
+  const wallPts  = [];
+
+  for(const it of placed){
+    if(it.type==='floor' && BOX_IDS.has(it.piece.id)){
+      // Sit inside box: surface = box floor (gy), cat group y = gy + CAT_FOOT
+      floorPts.push({
+        x: it.gx + it.piece.w/2,
+        y: it.gy + CAT_FOOT,
+        z: it.gz + it.piece.d/2,
+        sc: 1.0, kind:'floor',
+      });
+    }
+    if(it.type==='floor' && TUNNEL_IDS.has(it.piece.id)){
+      // Crouching through tunnel — surface = gy, scale down so cat fits
+      floorPts.push({
+        x: it.gx + it.piece.w/2,
+        y: it.gy + CAT_FOOT * 0.7,
+        z: it.gz + it.piece.d/2,
+        sc: 0.75, kind:'floor',
+      });
+    }
+    if(it.type==='floor' && PLANT_IDS.has(it.piece.id)){
+      // Standing next to plant on floor level
+      floorPts.push({
+        x: it.gx + it.piece.w/2 + 0.5,
+        y: it.gy + CAT_FOOT,
+        z: it.gz + it.piece.d/2,
+        sc: 0.9, kind:'floor',
+      });
+    }
+    if(it.type==='wall'){
+      wallPts.push({
+        x: it.visitX,
+        y: it.visitY,
+        z: it.visitZ,
+        sc: it.visitSc || 0.85,
+        kind: it.piece.id==='w_hammock' ? 'hammock' : 'wall',
+        wallY: it.gy,
+      });
+    }
+  }
+
+  // Sort floor pieces nearest the wall first (low Z), then left-to-right
+  floorPts.sort((a,b) => a.z - b.z || a.x - b.x);
+
+  // Sort wall pieces bottom-to-top
+  wallPts.sort((a,b) => a.wallY - b.wallY || a.x - b.x);
+
+  if(wallPts.length === 0) return floorPts;
+  if(floorPts.length === 0) return wallPts;
+
+  // Route: walk floor → jump to lowest wall piece → climb up wall → 
+  //        descend back down → jump back to floor → repeat
+  const wallUp   = wallPts;
+  const wallDown = wallPts.length > 1 ? [...wallPts].reverse().slice(1) : [];
+  return [...floorPts, ...wallUp, ...wallDown];
+}
+
+// ── GRIFFEY — solid grey cat ──
+function buildGriffeyMesh(){
+  // Reuse same rig structure as Winston, just different colours
+  // Grey: medium grey body, white chest, pink nose, green eyes
+  const origFur  = '0xf0a860'; // placeholder — we patch materials after build
+
+  // Temporarily override the texture functions to produce grey colours
+  const savedBuild = buildWinstonMesh;
+
+  // Build a grey cat by constructing the mesh and swapping material colours
+  const g = buildWinstonMesh();
+
+  // Walk every mesh child and recolour fur → grey, pale → white
+  g.traverse(child => {
+    if(!child.isMesh) return;
+    const mats = Array.isArray(child.material) ? child.material : [child.material];
+    mats.forEach(m => {
+      if(!m.map) return; // skip non-texture mats
+      // Rebuild texture with grey palette
+      const cv = document.createElement('canvas'); cv.width=64; cv.height=64;
+      const c = cv.getContext('2d');
+      // Detect which texture type by sampling the original
+      const orig = m.map.image;
+      if(!orig) return;
+      const tmp = document.createElement('canvas');
+      tmp.width=orig.width||64; tmp.height=orig.height||64;
+      const tc = tmp.getContext('2d');
+      tc.drawImage(orig,0,0);
+      const px = tc.getImageData(0,0,1,1).data;
+      const isLight = px[0]>200; // pale/white texture
+      if(isLight){
+        // Keep white/pale — chest and muzzle
+        c.fillStyle='#f0eee8'; c.fillRect(0,0,64,64);
+      } else {
+        // Solid grey — no stripes
+        c.fillStyle='#7a7a72'; c.fillRect(0,0,64,64);
+      }
+      m.map = new THREE.CanvasTexture(cv);
+      m.map.wrapS = m.map.wrapT = THREE.RepeatWrapping;
+      m.needsUpdate = true;
+    });
+  });
+
+  return g;
+}
+
+// ── GENERIC CAT MANAGEMENT ──
+function toggleCat(name){
+  const cat = cats[name];
+  if(cat.active && cat.mesh){
+    // Remove
+    scene.remove(cat.mesh);
+    cat.mesh=null; cat.active=false; cat.rig=null;
+    updateCatButtons();
+    if(name==='winston'){ winston=null; wRig=null; }
+    return;
+  }
+  // Add
+  cat.mesh = (name==='winston') ? buildWinstonMesh() : buildGriffeyMesh();
+  cat.rig = cat.mesh._rig || wRig; // grab rig set during build
+  if(name==='winston'){ winston=cat.mesh; wRig=cat.rig; }
+  cat.active=true;
+  scene.add(cat.mesh);
+
+  const pts = buildWinstonPath();
+  if(pts.length===0){
+    cat.mesh.scale.setScalar(1.0);
+    // Place cats side by side in room centre
+    const ox = name==='griffey' ? 0.5 : -0.5;
+    cat.mesh.position.set(ROOM/2+ox, CAT_FOOT, ROOM/2);
+    cat.state='idle';
+    updateCatButtons();
+    setHint('Place some furniture so the cats can explore!');
+    return;
+  }
+
+  const loop = [...pts,...[...pts].reverse().slice(1,-1)];
+  cat.path  = loop;
+  // Griffey starts halfway through so they're never at the same spot
+  cat.idx   = (name==='griffey') ? Math.floor(loop.length/2) : 0;
+  cat.pause = 0;
+  cat.state = 'walking';
+  cat.T     = 0;
+  cat.phase = (name==='griffey') ? Math.PI : 0; // offset walk phase too
+
+  const startPt = loop[cat.idx];
+  cat.mesh.scale.setScalar(startPt.sc||1);
+  cat.mesh.position.set(startPt.x, startPt.y, startPt.z);
+
+  // Sync legacy vars for Winston
+  if(name==='winston'){
+    wRig=null;
+    cat.rig=null; // will be set by buildWinstonMesh via wRig
+  }
+
+  updateCatButtons();
+  const activeNames = Object.entries(cats).filter(([,c])=>c.active).map(([n])=>n);
+  setHint(activeNames.map(n=>n[0].toUpperCase()+n.slice(1)).join(' & ')+' are exploring!');
+}
+
+function updateCatButtons(){
+  ['winston','griffey'].forEach(name=>{
+    const active = cats[name].active;
+    ['','mob-'].forEach(pre=>{
+      const btn = document.getElementById(pre+'btn-'+name);
+      if(!btn) return;
+      const label = name[0].toUpperCase()+name.slice(1);
+      btn.textContent = (active?'Remove ':'Add ')+label;
+      btn.style.opacity = active ? '0.7' : '1';
+    });
+  });
+}
+
+// Legacy wrapper so any existing calls to addWinston() still work
+function addWinston(){ toggleCat('winston'); }
+
+// Jump arc state — used when Winston leaps between floor and wall
+// wJump now stored per-cat in cats.X.jump
+
+// How long (frames @60fps) a cat pauses at each spot
+// Hammock = very long lounge, boxes = medium sit, floor = brief sniff
+function pauseDuration(target){
+  if(target && target.kind==='hammock') return 300 + Math.floor(Math.random()*180); // 5-8s
+  if(target && target.kind==='wall')    return 150 + Math.floor(Math.random()*120); // 2.5-4.5s
+  return 90 + Math.floor(Math.random()*90);  // 1.5-3s on floor
+}
+
+function tickCat(cat){
+  if(!cat.mesh) return;
+  cat.T += .016;
+
+  const isWalking = (cat.state==='walking'||cat.state==='jumping');
+  // Slow walk cycle — cats amble, they don't trot
+  if(isWalking) cat.phase += 0.055;
+  else          cat.phase += 0.018;
+
+  if(cat === cats.winston){
+    wRig = cat.rig;
+    animateWinston(isWalking, cat.phase);
+  } else {
+    const savedRig = wRig;
+    wRig = cat.rig;
+    animateWinston(isWalking, cat.phase);
+    wRig = savedRig;
+  }
+
+  if(cat.state==='idle'){
+    cat.mesh.position.y = CAT_FOOT + Math.sin(cat.T*0.6)*.03;
+    return;
+  }
+
+  if(cat.state==='lounging'){
+    // Cat is in hammock — gently sway, stay put a long time
+    if(cat.lounge){
+      cat.lounge.t++;
+      const sway = Math.sin(cat.T * 0.4) * 0.015;
+      cat.mesh.position.y = cat.lounge.y + sway;
+      cat.mesh.rotation.z = Math.sin(cat.T * 0.35) * 0.04; // gentle rock
+      if(cat.lounge.t >= cat.lounge.dur){
+        cat.mesh.rotation.z = 0;
+        cat.lounge = null;
+        cat.state = 'walking';
+      }
+    } else {
+      cat.state = 'walking';
+    }
+    return;
+  }
+
+  if(cat.state==='pausing'){
+    // Gentle idle bob while sitting/standing
+    const target = cat.path[(cat.idx - 1 + cat.path.length) % cat.path.length];
+    if(target) cat.mesh.position.y = target.y + Math.sin(cat.T*0.8)*0.02;
+    cat.pause--;
+    if(cat.pause<=0) cat.state='walking';
+    return;
+  }
+
+  if(cat.state==='jumping'){
+    if(!cat.jump){cat.state='walking';return;}
+    // Slow graceful arc
+    cat.jump.t += 0.012;
+    const tt = Math.min(cat.jump.t/cat.jump.dur, 1);
+    // Ease in-out for smooth landing
+    const ease = tt < 0.5 ? 2*tt*tt : -1+(4-2*tt)*tt;
+    cat.mesh.position.x = cat.jump.fromX+(cat.jump.toX-cat.jump.fromX)*ease;
+    cat.mesh.position.z = cat.jump.fromZ+(cat.jump.toZ-cat.jump.fromZ)*ease;
+    const baseY = cat.jump.fromY+(cat.jump.toY-cat.jump.fromY)*ease;
+    cat.mesh.position.y = baseY + Math.sin(tt*Math.PI)*cat.jump.arcH;
+    // Tilt forward during jump
+    cat.mesh.rotation.x = Math.sin(tt*Math.PI) * -0.2;
+    if(tt>=1){
+      cat.mesh.rotation.x = 0;
+      cat.jump=null;
+      cat.state='pausing';
+      cat.pause = pauseDuration(cat.path[cat.idx]);
+    }
+    return;
+  }
+
+  if(cat.state==='walking'){
+    const target=cat.path[cat.idx];
+    if(!target){cat.idx=0;return;}
+    const dx=target.x-cat.mesh.position.x;
+    const dy=target.y-cat.mesh.position.y;
+    const dz=target.z-cat.mesh.position.z;
+    const dist=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    const tsc=target.sc||0.85;
+
+    if(dist>.08){
+      // Slow amble — 0.018 units/frame ≈ 1 unit/sec, about right for a cat strolling
+      const spd = 0.018;
+      cat.mesh.position.x += dx/dist*spd;
+      cat.mesh.position.z += dz/dist*spd;
+      cat.mesh.position.y += dy/dist*spd;
+
+      // Smooth rotation toward travel direction
+      if(Math.abs(dx)>.01||Math.abs(dz)>.01){
+        const ta=Math.atan2(dx,dz);
+        let diff=ta-cat.mesh.rotation.y;
+        while(diff>Math.PI)  diff-=Math.PI*2;
+        while(diff<-Math.PI) diff+=Math.PI*2;
+        cat.mesh.rotation.y += diff * 0.08; // slow turn
+      }
+      cat.mesh.scale.setScalar(tsc);
+    } else {
+      // Arrived at target
+      cat.mesh.scale.setScalar(tsc);
+      cat.mesh.position.set(target.x, target.y, target.z);
+
+      const nextIdx=(cat.idx+1)%cat.path.length;
+      const next=cat.path[nextIdx];
+      cat.idx=nextIdx;
+
+      if(target.kind==='hammock'){
+        // Settle into hammock for a long lounge
+        cat.state='lounging';
+        cat.lounge={t:0, dur:pauseDuration(target), y:target.y};
+      } else if(next){
+        const hd=Math.abs(next.y-target.y);
+        const cross=(target.kind!==next.kind);
+        if(cross||hd>1.0){
+          cat.state='jumping';
+          cat.jump={fromX:target.x,fromY:target.y,fromZ:target.z,
+                    toX:next.x,toY:next.y,toZ:next.z,t:0,dur:1,
+                    arcH:Math.max(hd*0.4,0.5)};
+        } else {
+          cat.state='pausing';
+          cat.pause=pauseDuration(target);
+        }
+      } else {
+        cat.state='pausing';
+        cat.pause=pauseDuration(target);
+      }
+    }
+  }
+}
+
+function tickWinston(){
+  tickCat(cats.winston);
+  tickCat(cats.griffey);
+}
+
+// ═══════════════════════════════════════════════════════════
+// RAYCASTING
+// ═══════════════════════════════════════════════════════════
+function getRay(ex,ey){
+  const rect=renderer.domElement.getBoundingClientRect();
+  const mx=((ex-rect.left)/rect.width)*2-1;
+  const my=-((ey-rect.top)/rect.height)*2+1;
+  const ray=new THREE.Raycaster();
+  ray.setFromCamera(new THREE.Vector2(mx,my),camera);
+  return ray;
+}
+
+function getFloorPos(ex,ey){
+  const ray=getRay(ex,ey);
+  // Try top faces of placed boxes first
+  let best=null,bestD=Infinity;
+  for(const it of placed){
+    if(it.type!=='floor') continue;
+    const top=it.gy+it.piece.h;
+    const pl=new THREE.Plane(new THREE.Vector3(0,1,0),-top);
+    const pt=new THREE.Vector3();
+    if(ray.ray.intersectPlane(pl,pt)){
+      if(pt.x>=it.gx&&pt.x<=it.gx+it.piece.w&&pt.z>=it.gz&&pt.z<=it.gz+it.piece.d){
+        const dist=camera.position.distanceTo(pt);
+        if(dist<bestD){bestD=dist;best=pt.clone();}
+      }
+    }
+  }
+  if(!best){ best=new THREE.Vector3(); ray.ray.intersectPlane(FLOOR_PLANE,best); }
+  const p=sel;
+  return {
+    gx:Math.max(0,Math.min(ROOM-p.w, Math.floor(best.x))),
+    gz:Math.max(0,Math.min(ROOM-p.d, Math.floor(best.z))),
+  };
+}
+
+function getWallPos(ex,ey){
+  const ray=getRay(ex,ey);
+  const pt=new THREE.Vector3();
+  // Try back wall first
+  const ptB=new THREE.Vector3();
+  const ptL=new THREE.Vector3();
+  const hitB=ray.ray.intersectPlane(BACK_WALL_PLANE,ptB);
+  const hitL=ray.ray.intersectPlane(LEFT_WALL_PLANE,ptL);
+  // Pick the wall whose intersection is closer to the ray origin
+  // and within the room bounds — prefer whichever the user is aimed at
+  let wall='back', pt2=ptB;
+  if(hitL && ptL.z>=0 && ptL.z<=ROOM && ptL.y>=0){
+    if(!hitB || !ptB.x || ptB.x<0){
+      wall='left'; pt2=ptL;
+    } else {
+      // pick whichever is closer to camera
+      const dB=camera.position.distanceTo(ptB);
+      const dL=camera.position.distanceTo(ptL);
+      // bias toward back wall unless clearly aiming at left wall (ptL.x < 1)
+      if(ptL.x < 0.5 && dL < dB) { wall='left'; pt2=ptL; }
+    }
+  }
+  wallTarget=wall;
+  const p=sel;
+  if(wall==='left'){
+    return {
+      gx:Math.max(0,Math.min(ROOM-p.w, Math.round(pt2.z-p.w/2))),
+      gy:Math.max(0,Math.min(WALL_H-p.h, Math.round(pt2.y-p.h/2))),
+      wall,
+    };
+  }
+  return {
+    gx:Math.max(0,Math.min(ROOM-p.w, Math.round(pt2.x-p.w/2))),
+    gy:Math.max(0,Math.min(WALL_H-p.h, Math.round(pt2.y-p.h/2))),
+    wall,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
+// MOUSE
+// ═══════════════════════════════════════════════════════════
+function onDown(e){dragging=false;mdx=e.clientX;mdy=e.clientY;lmx=e.clientX;lmy=e.clientY;}
+function onMove(e){
+  const dx=e.clientX-lmx,dy=e.clientY-lmy;
+  if(e.buttons===1&&(Math.abs(e.clientX-mdx)>4||Math.abs(e.clientY-mdy)>4)){
+    dragging=true; theta-=dx*.007;
+    phi=Math.max(.08,Math.min(Math.PI/2.02,phi+dy*.007));
+    updateCam(); renderer.domElement.style.cursor='grabbing';
+  } else if(!dragging){
+    renderer.domElement.style.cursor='crosshair';
+    if(WALL_IDS.has(sel.id)){
+      const wp=getWallPos(e.clientX,e.clientY);
+      if(wp) showWallGhost(wp.gx,wp.gy,wp.wall); else clearGhost();
+    } else {
+      const fp=getFloorPos(e.clientX,e.clientY);
+      showFloorGhost(fp.gx,fp.gz);
+    }
+  }
+  lmx=e.clientX;lmy=e.clientY;
+}
+function onUp(e){
+  renderer.domElement.style.cursor='crosshair';
+  if(dragging){dragging=false;return;}
+  if(WALL_IDS.has(sel.id)){
+    const wp=getWallPos(e.clientX,e.clientY);
+    if(wp) placeWall(wp.gx,wp.gy,wp.wall);
+  } else {
+    const fp=getFloorPos(e.clientX,e.clientY);
+    placeFloor(fp.gx,fp.gz);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CAMERA
+// ═══════════════════════════════════════════════════════════
+function updateCam(){
+  const cx=ROOM/2,cy=WALL_H/2,cz=ROOM/2;
+  camera.position.set(
+    cx+rad*Math.sin(phi)*Math.sin(theta),
+    cy+rad*Math.cos(phi)*.9,
+    cz+rad*Math.sin(phi)*Math.cos(theta)
+  );
+  camera.lookAt(cx,cy*.4,cz);
+}
+function rc(dt,dp){theta+=dt;phi=Math.max(.08,Math.min(Math.PI/2.02,phi+dp));updateCam();}
+function zc(d){rad=Math.max(5,Math.min(28,rad+d));updateCam();}
+function setHint(t){document.getElementById('hint').textContent=t;}
+
+// ═══════════════════════════════════════════════════════════
+// INIT — build the room
+// ═══════════════════════════════════════════════════════════
+function init(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0xf0ece4);
+  scene.fog=new THREE.Fog(0xf0ece4,30,52);
+
+  const W=mount.clientWidth||800,H=mount.clientHeight||560;
+  camera=new THREE.PerspectiveCamera(40,W/H,.1,100);
+  updateCam();
+  renderer=new THREE.WebGLRenderer({antialias:true, logarithmicDepthBuffer:true});
+  renderer.setSize(W,H);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  mount.appendChild(renderer.domElement);
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0xfff8f0,.82));
+  const sun=new THREE.DirectionalLight(0xfff4e0,.88);
+  sun.position.set(8,16,10); sun.castShadow=true;
+  sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.camera.left=-16;sun.shadow.camera.right=16;
+  sun.shadow.camera.top=16;sun.shadow.camera.bottom=-16;
+  scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xd8e8ff,.22);
+  fill.position.set(-6,8,-4); scene.add(fill);
+
+  // ── ROOM GEOMETRY ──
+  const wallM=new THREE.MeshLambertMaterial({color:C.wallColor,side:THREE.BackSide});
+  const floorM=new THREE.MeshLambertMaterial({color:C.floorColor});
+
+  // Floor
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(ROOM,ROOM),floorM);
+  floor.rotation.x=-Math.PI/2; floor.position.set(ROOM/2,0,ROOM/2); floor.receiveShadow=true; scene.add(floor);
+
+  // Back wall (z=0)
+  const backWall=new THREE.Mesh(new THREE.PlaneGeometry(ROOM,WALL_H),new THREE.MeshLambertMaterial({color:C.wallColor,side:THREE.DoubleSide}));
+  backWall.position.set(ROOM/2,WALL_H/2,0); backWall.receiveShadow=true; scene.add(backWall);
+
+  // Left wall (x=0)
+  const leftWall=new THREE.Mesh(new THREE.PlaneGeometry(ROOM,WALL_H),new THREE.MeshLambertMaterial({color:0xd0c8bc,side:THREE.DoubleSide}));
+  leftWall.rotation.y=Math.PI/2; leftWall.position.set(0,WALL_H/2,ROOM/2); leftWall.receiveShadow=true; scene.add(leftWall);
+
+  // Room edge trim
+  const em=new THREE.LineBasicMaterial({color:C.roomEdge,transparent:true,opacity:.55});
+  function roomLine(...pts){ scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts.map(p=>new THREE.Vector3(...p))),em)); }
+  // floor edges
+  roomLine([0,0,0],[ROOM,0,0],[ROOM,0,ROOM],[0,0,ROOM],[0,0,0]);
+  // vertical corners
+  roomLine([0,0,0],[0,WALL_H,0]);
+  roomLine([ROOM,0,0],[ROOM,WALL_H,0]);
+  roomLine([0,0,ROOM],[0,WALL_H,ROOM]);
+  // top edges of visible walls
+  roomLine([0,WALL_H,0],[ROOM,WALL_H,0]); // back wall top
+  roomLine([0,WALL_H,0],[0,WALL_H,ROOM]); // left wall top
+
+  // Floor grid
+  const gm=new THREE.LineBasicMaterial({color:0xb8a888,transparent:true,opacity:.45});
+  for(let i=0;i<=ROOM;i++){
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(i,0,0),new THREE.Vector3(i,0,ROOM)]),gm));
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,i),new THREE.Vector3(ROOM,0,i)]),gm));
+  }
+  // Alternating floor squares
+  for(let x=0;x<ROOM;x++) for(let z=0;z<ROOM;z++) if((x+z)%2===0){
+    const sq=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0xc0b494,transparent:true,opacity:.3}));
+    sq.rotation.x=-Math.PI/2; sq.position.set(x+.5,.001,z+.5); scene.add(sq);
+  }
+
+  // Back wall grid
+  const wgm=new THREE.LineBasicMaterial({color:0xc0b8aa,transparent:true,opacity:.4});
+  for(let x=0;x<=ROOM;x++){
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x,0,.01),new THREE.Vector3(x,WALL_H,.01)]),wgm));
+  }
+  for(let y=0;y<=WALL_H;y++){
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,y,.01),new THREE.Vector3(ROOM,y,.01)]),wgm));
+  }
+  // Left wall grid (x=0 plane, runs along Z)
+  const lwgm=new THREE.LineBasicMaterial({color:0xb8b0a4,transparent:true,opacity:.38});
+  for(let z=0;z<=ROOM;z++){
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(.01,0,z),new THREE.Vector3(.01,WALL_H,z)]),lwgm));
+  }
+  for(let y=0;y<=WALL_H;y++){
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(.01,y,0),new THREE.Vector3(.01,y,ROOM)]),lwgm));
+  }
+
+  // Events
+  renderer.domElement.addEventListener('mousedown',onDown);
+  renderer.domElement.addEventListener('mousemove',onMove);
+  renderer.domElement.addEventListener('mouseup',onUp);
+  renderer.domElement.addEventListener('mouseleave',clearGhost);
+  renderer.domElement.addEventListener('wheel',e=>{rad=Math.max(5,Math.min(28,rad+e.deltaY*.018));updateCam();},{passive:true});
+
+  // ── TOUCH EVENTS ──
+  let tLast=null, tPinchD=null;
+  renderer.domElement.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    if(e.touches.length===1){
+      const t=e.touches[0];
+      tLast={x:t.clientX,y:t.clientY};
+      mdx=t.clientX; mdy=t.clientY; dragging=false;
+      tPinchD=null;
+    } else if(e.touches.length===2){
+      tPinchD=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    }
+  },{passive:false});
+
+  renderer.domElement.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===2 && tPinchD!==null){
+      // Pinch zoom
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      rad=Math.max(5,Math.min(28,rad-(d-tPinchD)*.04));
+      tPinchD=d; updateCam(); return;
+    }
+    if(e.touches.length===1 && tLast){
+      const t=e.touches[0];
+      const dx=t.clientX-tLast.x, dy=t.clientY-tLast.y;
+      const totalDx=t.clientX-mdx, totalDy=t.clientY-mdy;
+      if(Math.abs(totalDx)>6||Math.abs(totalDy)>6) dragging=true;
+      if(dragging){
+        theta-=dx*.007;
+        phi=Math.max(.08,Math.min(Math.PI/2.02,phi+dy*.007));
+        updateCam();
+      }
+      tLast={x:t.clientX,y:t.clientY};
+    }
+  },{passive:false});
+
+  renderer.domElement.addEventListener('touchend',e=>{
+    e.preventDefault();
+    if(!dragging && e.changedTouches.length===1){
+      const t=e.changedTouches[0];
+      // Tap to place
+      if(WALL_IDS.has(sel.id)){
+        const wp=getWallPos(t.clientX,t.clientY);
+        if(wp) placeWall(wp.gx,wp.gy,wp.wall);
+      } else {
+        const fp=getFloorPos(t.clientX,t.clientY);
+        placeFloor(fp.gx,fp.gz);
+      }
+    }
+    dragging=false; tLast=null;
+  },{passive:false});
+
+  window.addEventListener('resize',()=>{
+    const W=mount.clientWidth,H=mount.clientHeight;
+    camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);
+  });
+  requestAnimationFrame(loop);
+}
+
+function loop(){
+  requestAnimationFrame(loop);
+  tickWinston();
+  // Gentle ghost float
+  if(ghost) ghost.position.y=ghostTarget.y+Math.sin(Date.now()*.003)*.04;
+  renderer.render(scene,camera);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SIDEBAR UI
+// ═══════════════════════════════════════════════════════════
+function thumbBox(p){
+  const s=5,ox=22,oy=30;
+  const dw=Math.min(p.w,3)*s,dh=Math.min(p.h,3)*s,dd=Math.min(p.d,3)*s;
+  const c=.866,si=.5;
+  const fr=`${ox},${oy} ${ox+dw*c},${oy-dw*si} ${ox+dw*c},${oy-dw*si-dh} ${ox},${oy-dh}`;
+  const ri=`${ox+dw*c},${oy-dw*si} ${ox+dw*c-dd*c},${oy-dw*si-dd*si} ${ox+dw*c-dd*c},${oy-dw*si-dd*si-dh} ${ox+dw*c},${oy-dw*si-dh}`;
+  const top=`${ox},${oy-dh} ${ox+dw*c},${oy-dw*si-dh} ${ox+dw*c-dd*c},${oy-dw*si-dd*si-dh} ${ox-dd*c},${oy-dd*si-dh} ${ox},${oy-dh}`;
+  return `<polygon points="${fr}" fill="#d4a86a" stroke="rgba(0,0,0,.15)" stroke-width=".5"/>
+          <polygon points="${ri}" fill="#b08040" stroke="rgba(0,0,0,.15)" stroke-width=".5"/>
+          <polyline points="${top}" fill="none" stroke="#7a4c1c" stroke-width="1.1"/>`;
+}
+
+function thumbWall(p){
+  const ox=6,oy=22,s=8;
+  const pw=Math.min(p.w,4)*s, ph=Math.min(p.h,3.5)*s;
+  if(p.id==='w_post') return `<rect x="${ox}" y="${oy-ph}" width="${pw}" height="${ph}" rx="3" fill="#b09060" stroke="#7a4c1c" stroke-width="1"/>`;
+  if(p.id==='w_box'){
+    const hr=Math.min(pw,ph)*.28;
+    return `<rect x="${ox}" y="${oy-ph}" width="${pw}" height="${ph}" fill="#d4a050" stroke="#7a4c1c" stroke-width="1"/>
+            <circle cx="${ox+pw/2}" cy="${oy-ph/2}" r="${hr}" fill="#180c02" stroke="#8a5820" stroke-width=".8"/>`;
+  }
+  if(p.id==='w_ladder'){
+    // Rope bridge: sagging ropes with slats
+    const pts = Array.from({length:10},(_,i)=>{
+      const t=(i+0.5)/10, x=5+t*36, y=22-Math.sin(t*Math.PI)*8;
+      return `<rect x="${(x-1.5).toFixed(1)}" y="${(y-2).toFixed(1)}" width="3.5" height="3" rx="0.5" fill="#d4a050"/>`;
+    }).join('');
+    return `<path d="M5,14 Q23,24 41,14" fill="none" stroke="#c8a850" stroke-width="1.2"/>
+            <path d="M5,18 Q23,28 41,18" fill="none" stroke="#c8a850" stroke-width="1.2"/>
+            ${pts}
+            <rect x="3" y="12" width="5" height="10" rx="1" fill="#8a5820"/>
+            <rect x="38" y="12" width="5" height="10" rx="1" fill="#8a5820"/>`;
+  }
+  if(p.id==='w_hammock'){
+    // Circular rim + sagging fabric bowl inside
+    return `<circle cx="23" cy="19" r="13" fill="none" stroke="#d4a050" stroke-width="3.5"/>
+            <path d="M11,16 Q23,30 35,16" fill="#d4c8b8" stroke="none"/>
+            <path d="M11,16 Q23,30 35,16" fill="none" stroke="#b8aa98" stroke-width="1"/>
+            <rect x="9" y="17" width="4" height="3" rx="1" fill="#8a5820"/>
+            <rect x="33" y="17" width="4" height="3" rx="1" fill="#8a5820"/>`;
+  }
+  // shelf / wide shelf
+  return `<rect x="${ox}" y="${oy-ph}" width="${pw}" height="${ph}" fill="#d4a050" stroke="#7a4c1c" stroke-width="1" rx="1"/>
+          <rect x="${ox+pw*.35}" y="${oy}" width="${pw*.3}" height="${s*.5}" fill="#8a5820" rx="1"/>`;
+}
+
+function thumbSpecial(p){
+  if(p.id==='f_tunnel'){
+    // 3/4 isometric cylinder — front ellipse, back ellipse, connecting body
+    return `
+      <defs><clipPath id="tc"><rect x="5" y="2" width="36" height="30"/></clipPath></defs>
+      <!-- body fill -->
+      <rect x="8" y="10" width="26" height="16" fill="#5a8a5a"/>
+      <!-- back opening (darker, smaller) -->
+      <ellipse cx="34" cy="18" rx="5" ry="8" fill="#3a5a3a" stroke="#2a4a2a" stroke-width="1"/>
+      <!-- top edge -->
+      <line x1="8" y1="10" x2="34" y2="10" stroke="#3a6a3a" stroke-width="1.5"/>
+      <!-- bottom edge -->
+      <line x1="8" y1="26" x2="34" y2="26" stroke="#2a4a2a" stroke-width="1.5"/>
+      <!-- band stripes -->
+      <line x1="17" y1="10" x2="17" y2="26" stroke="#3a6a3a" stroke-width="1.2" opacity="0.7"/>
+      <line x1="25" y1="10" x2="25" y2="26" stroke="#3a6a3a" stroke-width="1.2" opacity="0.7"/>
+      <!-- front opening -->
+      <ellipse cx="8" cy="18" rx="5" ry="8" fill="#1a2a1a" stroke="#3a6a3a" stroke-width="1.5"/>
+    `;
+  }
+  if(p.id==='f_plant'){
+    return `<rect x="16" y="24" width="14" height="10" rx="2" fill="#c07848" stroke="#8a4828" stroke-width="1"/>
+            <line x1="23" y1="24" x2="14" y2="8"  stroke="#4a9040" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="23" y1="24" x2="23" y2="6"  stroke="#4a9040" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="23" y1="24" x2="32" y2="9"  stroke="#7ab860" stroke-width="2"   stroke-linecap="round"/>
+            <line x1="23" y1="24" x2="18" y2="12" stroke="#7ab860" stroke-width="2"   stroke-linecap="round"/>
+            <line x1="23" y1="24" x2="28" y2="11" stroke="#4a9040" stroke-width="2"   stroke-linecap="round"/>`;
+  }
+  return thumbBox(p);
+}
+
+function makeCard(p){
+  const card=document.createElement('div');
+  card.className='pcard'+(p===sel?' on':'');
+  card.id='pc-'+p.id;
+  const isSpecial = TUNNEL_IDS.has(p.id)||PLANT_IDS.has(p.id);
+  const svg=BOX_IDS.has(p.id)||isSpecial ? thumbSpecial(p) : thumbWall(p);
+  card.innerHTML=`<svg width="46" height="34" viewBox="0 0 46 34">${svg}</svg><span>${p.name}</span><span class="tag">${p.type==='wall'?'wall':'floor'}</span>`;
+  card.onclick=()=>{
+    document.querySelectorAll('.pcard').forEach(x=>x.classList.remove('on'));
+    card.classList.add('on'); sel=p;
+    document.getElementById('sel-name').textContent=p.name;
+    const dims=p.type==='wall'?`wall · ${p.w}×${p.h}`:` floor · ${p.w}×${p.h}×${p.d}`;
+    document.getElementById('sel-tag').textContent=dims;
+    clearGhost();
+    setHint(p.name+' selected — hover to preview');
+  };
+  return card;
+}
+
+function mobTab(name){
+  ['floor','wall','winston','edit'].forEach(t=>{
+    document.getElementById('mtab-'+t).classList.toggle('on',t===name);
+    document.getElementById('mpanel-'+t).classList.toggle('on',t===name);
+  });
+}
+
+function makeMobCard(p){
+  const card=document.createElement('div');
+  card.className='mob-pcard'+(p===sel?' on':'');
+  card.id='mob-pc-'+p.id;
+  const isSpecial=TUNNEL_IDS.has(p.id)||PLANT_IDS.has(p.id);
+  const svg=BOX_IDS.has(p.id)||isSpecial?thumbSpecial(p):thumbWall(p);
+  card.innerHTML=`<svg width="44" height="34" viewBox="0 0 46 34">${svg}</svg><span>${p.name}</span>`;
+  card.onclick=()=>{
+    document.querySelectorAll('.mob-pcard,.pcard').forEach(x=>x.classList.remove('on'));
+    card.classList.add('on');
+    // Also highlight desktop card
+    const dc=document.getElementById('pc-'+p.id);
+    if(dc) dc.classList.add('on');
+    sel=p;
+    document.getElementById('sel-name').textContent=p.name;
+    const dims=p.type==='wall'?`wall·${p.w}×${p.h}`:`floor·${p.w}×${p.h}×${p.d}`;
+    document.getElementById('sel-tag').textContent=dims;
+    clearGhost();
+    setHint(p.name+' selected — tap to place');
+  };
+  return card;
+}
+
+function buildPanels(){
+  // Desktop panels
+  const fe=document.getElementById('pg-floor');
+  FLOOR_PIECES.forEach(p=>fe.appendChild(makeCard(p)));
+  const we=document.getElementById('pg-wall');
+  WALL_PIECES.forEach(p=>we.appendChild(makeCard(p)));
+  // Mobile panels
+  const mfe=document.getElementById('mpanel-floor');
+  FLOOR_PIECES.forEach(p=>mfe.appendChild(makeMobCard(p)));
+  const mwe=document.getElementById('mpanel-wall');
+  WALL_PIECES.forEach(p=>mwe.appendChild(makeMobCard(p)));
+}
+
+buildPanels();
+init();
+</script>
+</body>
+</html>
