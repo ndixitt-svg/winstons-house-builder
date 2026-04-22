@@ -291,12 +291,23 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
         <div style="font-size:11px;color:#6b7280;font-family:'DM Mono',monospace;margin-bottom:7px;font-weight:500;">CHOOSE A CAT</div>
         <div id="cat-type-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;"></div>
 
-        <!-- Name input -->
+        <!-- Name input — uses native prompt on mobile to avoid iOS zoom bug -->
         <div style="font-size:11px;color:#6b7280;font-family:'DM Mono',monospace;margin-bottom:6px;font-weight:500;">NAME YOUR CAT</div>
+        <div id="cat-name-display" onclick="enterCatName()"
+          style="width:100%;padding:9px 12px;border:1.5px solid #c8cdd4;border-radius:8px;
+            font-family:'DM Sans',sans-serif;font-size:14px;background:#eceef0;color:#9aa0aa;
+            box-sizing:border-box;cursor:pointer;user-select:none;min-height:40px;
+            display:flex;align-items:center;gap:8px;">
+          <span id="cat-name-value" style="flex:1;color:#9aa0aa">Tap to enter a name…</span>
+          <span style="font-size:12px;color:#c8cdd4">✎</span>
+        </div>
+        <!-- Hidden real input only used on desktop -->
         <input id="cat-name-input" type="text" maxlength="18" placeholder="e.g. Luna, Mochi, Biscuit…"
           inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="words"
-          style="width:100%;padding:9px 12px;border:1.5px solid #c8cdd4;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:16px;background:#eceef0;color:#1e2228;outline:none;box-sizing:border-box;"
-          oninput="validateCatModal()" onkeydown="if(event.key==='Enter'){this.blur();confirmCustomCat()}"
+          style="display:none;width:100%;padding:9px 12px;border:1.5px solid #c8cdd4;border-radius:8px;
+            font-family:'DM Sans',sans-serif;font-size:16px;background:#eceef0;color:#1e2228;
+            outline:none;box-sizing:border-box;"
+          oninput="onDesktopNameInput()" onkeydown="if(event.key==='Enter'){this.blur();confirmCustomCat()}"
           onfocus="disableViewportZoom()" onblur="restoreViewportZoom()"/>
 
         <!-- Buttons -->
@@ -2437,7 +2448,14 @@ let _selectedCatType = null;
 
 function onCustomCatBtn(){
   _selectedCatType = null;
-  document.getElementById('cat-name-input').value = '';
+  _catNameValue = '';
+  // Reset name display
+  const display = document.getElementById('cat-name-display');
+  const input = document.getElementById('cat-name-input');
+  const valueEl = document.getElementById('cat-name-value');
+  if(display) { display.style.display='flex'; display.style.borderColor='#c8cdd4'; }
+  if(valueEl) { valueEl.textContent='Tap to enter a name…'; valueEl.style.color='#9aa0aa'; }
+  if(input) { input.style.display='none'; input.value=''; }
   document.getElementById('cat-confirm-btn').disabled = true;
   document.getElementById('cat-confirm-btn').style.opacity = '0.45';
 
@@ -2471,24 +2489,66 @@ function selectCatType(id){
   validateCatModal();
 }
 
-// ── iOS viewport zoom prevention for inputs ──
+// ── iOS viewport zoom prevention (desktop fallback only) ──
 function disableViewportZoom(){
   const vp = document.querySelector('meta[name=viewport]');
   if(vp) vp.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
 }
 function restoreViewportZoom(){
   const vp = document.querySelector('meta[name=viewport]');
-  // Small delay so iOS has time to settle before we re-enable zoom
   setTimeout(()=>{
     if(vp) vp.content = 'width=device-width, initial-scale=1.0';
-    // Force scroll back to top in case iOS shifted the page
     window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
   }, 100);
 }
 
+const isMobile = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || ('ontouchstart' in window);
+
+let _catNameValue = '';
+
+function enterCatName(){
+  if(isMobile()){
+    // Use native prompt — zero zoom, works perfectly on all iOS/Android
+    const name = window.prompt('Name your cat:', _catNameValue || '');
+    if(name !== null){
+      _catNameValue = name.trim().slice(0, 18);
+      updateCatNameDisplay();
+      validateCatModal();
+    }
+  } else {
+    // Desktop: show the real input instead
+    const display = document.getElementById('cat-name-display');
+    const input = document.getElementById('cat-name-input');
+    display.style.display = 'none';
+    input.style.display = 'block';
+    input.value = _catNameValue;
+    input.focus();
+  }
+}
+
+function onDesktopNameInput(){
+  _catNameValue = document.getElementById('cat-name-input').value.trim();
+  validateCatModal();
+}
+
+function updateCatNameDisplay(){
+  const display = document.getElementById('cat-name-display');
+  const valueEl = document.getElementById('cat-name-value');
+  if(_catNameValue){
+    valueEl.textContent = _catNameValue;
+    valueEl.style.color = '#1e2228';
+    display.style.borderColor = '#4f7c6e';
+  } else {
+    valueEl.textContent = 'Tap to enter a name…';
+    valueEl.style.color = '#9aa0aa';
+    display.style.borderColor = '#c8cdd4';
+  }
+}
+
 function validateCatModal(){
-  const name = document.getElementById('cat-name-input').value.trim();
+  const name = isMobile()
+    ? _catNameValue
+    : document.getElementById('cat-name-input').value.trim();
   const ok = _selectedCatType && name.length > 0;
   const btn = document.getElementById('cat-confirm-btn');
   btn.disabled = !ok;
@@ -2497,12 +2557,15 @@ function validateCatModal(){
 }
 
 function closeCatModal(){
-  document.getElementById('cat-name-input').blur();
+  const input = document.getElementById('cat-name-input');
+  if(input) input.blur();
   document.getElementById('cat-modal-overlay').style.display = 'none';
 }
 
 function confirmCustomCat(){
-  const name = document.getElementById('cat-name-input').value.trim();
+  const name = isMobile()
+    ? _catNameValue
+    : document.getElementById('cat-name-input').value.trim();
   if(!_selectedCatType || !name) return;
   customCatType = _selectedCatType;
   customCatName = name;
