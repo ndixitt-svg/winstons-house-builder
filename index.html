@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Winston's House Builder</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
@@ -296,7 +296,8 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
         <input id="cat-name-input" type="text" maxlength="18" placeholder="e.g. Luna, Mochi, Biscuit…"
           inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="words"
           style="width:100%;padding:9px 12px;border:1.5px solid #c8cdd4;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:16px;background:#eceef0;color:#1e2228;outline:none;box-sizing:border-box;"
-          oninput="validateCatModal()" onkeydown="if(event.key==='Enter'){this.blur();confirmCustomCat()}"/>
+          oninput="validateCatModal()" onkeydown="if(event.key==='Enter'){this.blur();confirmCustomCat()}"
+          onfocus="disableViewportZoom()" onblur="restoreViewportZoom()"/>
 
         <!-- Buttons -->
         <div style="display:flex;gap:8px;margin-top:16px;">
@@ -2468,6 +2469,22 @@ function selectCatType(id){
     el.style.transform = isThis ? 'scale(1.05)' : 'scale(1)';
   });
   validateCatModal();
+}
+
+// ── iOS viewport zoom prevention for inputs ──
+function disableViewportZoom(){
+  const vp = document.querySelector('meta[name=viewport]');
+  if(vp) vp.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+}
+function restoreViewportZoom(){
+  const vp = document.querySelector('meta[name=viewport]');
+  // Small delay so iOS has time to settle before we re-enable zoom
+  setTimeout(()=>{
+    if(vp) vp.content = 'width=device-width, initial-scale=1.0';
+    // Force scroll back to top in case iOS shifted the page
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+  }, 100);
 }
 
 function validateCatModal(){
