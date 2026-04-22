@@ -251,8 +251,26 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
     <div class="hintbar" id="hint">Select a piece and hover to preview</div>
     <!-- Edit buttons bottom-left -->
     <div class="editbtns">
-      <button class="catbtn" onclick="undoLast()">↩ Undo</button>
-      <button class="catbtn danger" onclick="clearAll()">✕ Clear</button>
+      <button class="catbtn" id="delete-mode-btn" onclick="toggleDeleteMode()">🗑 Delete</button>
+      <button class="catbtn danger" id="clear-btn" onclick="confirmClearAll()">✕ Clear all</button>
+    </div>
+    <!-- Delete mode hint bar -->
+    <div id="delete-hint" style="display:none;position:absolute;top:12px;left:50%;transform:translateX(-50%);
+      background:#c04040;color:#fff;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;
+      padding:7px 16px;border-radius:14px;pointer-events:none;white-space:nowrap;z-index:15;">
+      🗑 Tap any item to remove it · Tap Delete again to exit
+    </div>
+    <!-- Clear confirm overlay -->
+    <div id="clear-confirm" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:100;align-items:center;justify-content:center;">
+      <div style="background:#f6f7f9;border-radius:14px;padding:22px 24px;width:min(280px,85vw);box-shadow:0 8px 32px rgba(0,0,0,0.2);font-family:'DM Sans',sans-serif;text-align:center;">
+        <div style="font-size:28px;margin-bottom:10px">🗑️</div>
+        <div style="font-weight:600;font-size:15px;margin-bottom:6px">Clear everything?</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:18px">This removes all furniture and cats.</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="closeClearConfirm()" style="flex:1;padding:10px;border:1px solid #c8cdd4;border-radius:8px;background:#eceef0;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">Cancel</button>
+          <button onclick="doClearAll()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#c04040;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;">Clear all</button>
+        </div>
+      </div>
     </div>
     <!-- Cat buttons bottom-right — cute pill style -->
     <div class="catbtns" id="catbtns">
@@ -1345,11 +1363,11 @@ function clearGhost(){
   if(ghost){scene.remove(ghost);ghost=null;}
 }
 
-function showFloorGhost(gx,gz){
+function showFloorGhost(gx,gz,gyOverride){
   clearGhost();
   const p=sel;
   if(gx<0||gz<0||gx+p.w>ROOM||gz+p.d>ROOM) return;
-  const gy=stackH(gx,gz,p.w,p.d);
+  const gy = (gyOverride !== undefined) ? gyOverride : stackH(gx,gz,p.w,p.d);
   if(TUNNEL_IDS.has(p.id))      ghost=buildTunnel(p,true);
   else if(p.id==='f_fountain')   ghost=buildFountain(p,true);
   else if(p.id==='f_bowl')        ghost=buildFoodBowl(p,true);
@@ -1380,10 +1398,10 @@ function showWallGhost(gx,gy,wall){
 // ═══════════════════════════════════════════════════════════
 // PLACE
 // ═══════════════════════════════════════════════════════════
-function placeFloor(gx,gz){
+function placeFloor(gx,gz,gyOverride){
   const p=sel;
   if(gx<0||gz<0||gx+p.w>ROOM||gz+p.d>ROOM) return;
-  const gy=stackH(gx,gz,p.w,p.d);
+  const gy = (gyOverride !== undefined) ? gyOverride : stackH(gx,gz,p.w,p.d);
   let g;
   if(TUNNEL_IDS.has(p.id))      g=buildTunnel(p,false);
   else if(p.id==='f_fountain')   g=buildFountain(p,false);
@@ -1465,6 +1483,96 @@ function undoLast(){
   if(last) scene.remove(last.group);
   if(last?.type==='floor') rebuild();
   updateCount();
+}
+
+// ── DELETE MODE ──────────────────────────────────────────
+let deleteMode = false;
+let deleteHoverItem = null;
+
+function toggleDeleteMode(){
+  deleteMode = !deleteMode;
+  const btn = document.getElementById('delete-mode-btn');
+  const hint = document.getElementById('delete-hint');
+  if(deleteMode){
+    btn.classList.add('active');
+    btn.querySelector ? (btn.textContent = '🗑 Done') : null;
+    btn.textContent = '✓ Done';
+    hint.style.display = 'block';
+    clearGhost();
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🗑 Delete';
+    hint.style.display = 'none';
+    clearDeleteHover();
+  }
+}
+
+function clearDeleteHover(){
+  if(deleteHoverItem){
+    // Restore original material tint
+    deleteHoverItem.group.traverse(c=>{
+      if(c.isMesh && c._origColor !== undefined){
+        c.material.color.setHex(c._origColor);
+        c.material.emissive && c.material.emissive.setHex(0x000000);
+        delete c._origColor;
+      }
+    });
+    deleteHoverItem = null;
+  }
+}
+
+function setDeleteHover(item){
+  if(deleteHoverItem === item) return;
+  clearDeleteHover();
+  if(!item) return;
+  deleteHoverItem = item;
+  item.group.traverse(c=>{
+    if(c.isMesh){
+      c._origColor = c.material.color ? c.material.color.getHex() : 0xffffff;
+      if(c.material.emissive) c.material.emissive.setHex(0x881010);
+      else c.material = c.material.clone();
+    }
+  });
+}
+
+function deleteItem(item){
+  clearDeleteHover();
+  const idx = placed.indexOf(item);
+  if(idx !== -1) placed.splice(idx, 1);
+  scene.remove(item.group);
+  if(item.type === 'floor') rebuild();
+  updateCount();
+  setHint('Item removed');
+}
+
+function getHoveredPlacedItem(ex, ey){
+  const ray = getRay(ex, ey);
+  const meshes = [];
+  for(const it of placed){
+    it.group.traverse(c=>{ if(c.isMesh) meshes.push(c); });
+  }
+  if(!meshes.length) return null;
+  const hits = ray.intersectObjects(meshes, false);
+  if(!hits.length) return null;
+  const hitMesh = hits[0].object;
+  for(const it of placed){
+    let found = false;
+    it.group.traverse(c=>{ if(c === hitMesh) found = true; });
+    if(found) return it;
+  }
+  return null;
+}
+
+function confirmClearAll(){
+  const overlay = document.getElementById('clear-confirm');
+  overlay.style.display = 'flex';
+}
+function closeClearConfirm(){
+  document.getElementById('clear-confirm').style.display = 'none';
+}
+function doClearAll(){
+  closeClearConfirm();
+  clearAll();
 }
 
 function clearAll(){
@@ -2746,24 +2854,47 @@ function getRay(ex,ey){
 
 function getFloorPos(ex,ey){
   const ray=getRay(ex,ey);
-  let best=null,bestD=Infinity;
+  const p=sel;
+
+  // 1. Try raycasting against actual placed box meshes to find what surface we're over
+  const meshes=[];
   for(const it of placed){
     if(it.type!=='floor') continue;
-    const top=it.gy+it.piece.h;
-    const pl=new THREE.Plane(new THREE.Vector3(0,1,0),-top);
-    const pt=new THREE.Vector3();
-    if(ray.ray.intersectPlane(pl,pt)){
-      if(pt.x>=it.gx&&pt.x<=it.gx+it.piece.w&&pt.z>=it.gz&&pt.z<=it.gz+it.piece.d){
-        const dist=camera.position.distanceTo(pt);
-        if(dist<bestD){bestD=dist;best=pt.clone();}
+    it.group.traverse(c=>{ if(c.isMesh) meshes.push(c); });
+  }
+  if(meshes.length){
+    const hits=ray.intersectObjects(meshes,false);
+    if(hits.length){
+      // Find the placed item this mesh belongs to
+      const hitPt=hits[0].point;
+      // Use the top surface of the box we hit
+      let bestSurfaceY=0, bestItem=null;
+      for(const it of placed){
+        if(it.type!=='floor') continue;
+        const top=it.gy+it.piece.h;
+        // Check if hit point is within this box's XZ footprint (with small margin)
+        if(hitPt.x>=it.gx-0.1&&hitPt.x<=it.gx+it.piece.w+0.1&&
+           hitPt.z>=it.gz-0.1&&hitPt.z<=it.gz+it.piece.d+0.1){
+          if(top>bestSurfaceY){ bestSurfaceY=top; bestItem=it; }
+        }
+      }
+      if(bestItem){
+        return {
+          gx:Math.max(0,Math.min(ROOM-p.w, Math.floor(hitPt.x))),
+          gz:Math.max(0,Math.min(ROOM-p.d, Math.floor(hitPt.z))),
+          gy:bestSurfaceY,
+        };
       }
     }
   }
-  if(!best){ best=new THREE.Vector3(); ray.ray.intersectPlane(FLOOR_PLANE,best); }
-  const p=sel;
+
+  // 2. Fall back to floor plane
+  const best=new THREE.Vector3();
+  ray.ray.intersectPlane(FLOOR_PLANE,best);
   return {
     gx:Math.max(0,Math.min(ROOM-p.w, Math.floor(best.x))),
     gz:Math.max(0,Math.min(ROOM-p.d, Math.floor(best.z))),
+    gy:0,
   };
 }
 
@@ -2811,26 +2942,37 @@ function onMove(e){
     phi=Math.max(.08,Math.min(Math.PI/2.02,phi+dy*.007));
     updateCam(); renderer.domElement.style.cursor='grabbing';
   } else if(!dragging){
-    renderer.domElement.style.cursor='crosshair';
-    if(WALL_IDS.has(sel.id)){
-      const wp=getWallPos(e.clientX,e.clientY);
-      if(wp) showWallGhost(wp.gx,wp.gy,wp.wall); else clearGhost();
+    if(deleteMode){
+      renderer.domElement.style.cursor='pointer';
+      const item = getHoveredPlacedItem(e.clientX, e.clientY);
+      setDeleteHover(item);
     } else {
-      const fp=getFloorPos(e.clientX,e.clientY);
-      showFloorGhost(fp.gx,fp.gz);
+      renderer.domElement.style.cursor='crosshair';
+      if(WALL_IDS.has(sel.id)){
+        const wp=getWallPos(e.clientX,e.clientY);
+        if(wp) showWallGhost(wp.gx,wp.gy,wp.wall); else clearGhost();
+      } else {
+        const fp=getFloorPos(e.clientX,e.clientY);
+        showFloorGhost(fp.gx,fp.gz,fp.gy);
+      }
     }
   }
   lmx=e.clientX;lmy=e.clientY;
 }
 function onUp(e){
-  renderer.domElement.style.cursor='crosshair';
+  renderer.domElement.style.cursor = deleteMode ? 'pointer' : 'crosshair';
   if(dragging){dragging=false;return;}
+  if(deleteMode){
+    const item = getHoveredPlacedItem(e.clientX, e.clientY);
+    if(item) deleteItem(item);
+    return;
+  }
   if(WALL_IDS.has(sel.id)){
     const wp=getWallPos(e.clientX,e.clientY);
     if(wp) placeWall(wp.gx,wp.gy,wp.wall);
   } else {
     const fp=getFloorPos(e.clientX,e.clientY);
-    placeFloor(fp.gx,fp.gz);
+    placeFloor(fp.gx,fp.gz,fp.gy);
   }
 }
 
@@ -2984,12 +3126,15 @@ function init(){
     const isTap = !dragging && tTotalMove < TAP_THRESHOLD && elapsed < TAP_MAX_MS;
     if(isTap && e.changedTouches.length===1){
       const t=e.changedTouches[0];
-      if(WALL_IDS.has(sel.id)){
+      if(deleteMode){
+        const item = getHoveredPlacedItem(t.clientX, t.clientY);
+        if(item) deleteItem(item);
+      } else if(WALL_IDS.has(sel.id)){
         const wp=getWallPos(t.clientX,t.clientY);
         if(wp) placeWall(wp.gx,wp.gy,wp.wall);
       } else {
         const fp=getFloorPos(t.clientX,t.clientY);
-        placeFloor(fp.gx,fp.gz);
+        placeFloor(fp.gx,fp.gz,fp.gy);
       }
     }
     dragging=false; tLast=null; tTotalMove=0;
