@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <title>Winston's House Builder</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
@@ -13,7 +13,7 @@
   --text:#1e2228;--muted:#6b7280;--accent:#4f7c6e;--abg:#e8f0ed;
   --bottom-h:0px;
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:var(--app-h,100dvh);overflow:hidden;display:flex;flex-direction:column}
 header{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
 h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
 .subtitle{font-size:10.5px;color:var(--muted)}
@@ -294,8 +294,9 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
         <!-- Name input -->
         <div style="font-size:11px;color:#6b7280;font-family:'DM Mono',monospace;margin-bottom:6px;font-weight:500;">NAME YOUR CAT</div>
         <input id="cat-name-input" type="text" maxlength="18" placeholder="e.g. Luna, Mochi, Biscuit…"
-          style="width:100%;padding:9px 12px;border:1.5px solid #c8cdd4;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:#eceef0;color:#1e2228;outline:none;box-sizing:border-box;"
-          oninput="validateCatModal()" onkeydown="if(event.key==='Enter')confirmCustomCat()"/>
+          inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="words"
+          style="width:100%;padding:9px 12px;border:1.5px solid #c8cdd4;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:16px;background:#eceef0;color:#1e2228;outline:none;box-sizing:border-box;"
+          oninput="validateCatModal()" onkeydown="if(event.key==='Enter'){this.blur();confirmCustomCat()}"/>
 
         <!-- Buttons -->
         <div style="display:flex;gap:8px;margin-top:16px;">
@@ -2479,6 +2480,7 @@ function validateCatModal(){
 }
 
 function closeCatModal(){
+  document.getElementById('cat-name-input').blur();
   document.getElementById('cat-modal-overlay').style.display = 'none';
 }
 
@@ -3182,9 +3184,22 @@ function init(){
     dragging=false; tIsPlacing=false; tLast=null; tTotalMove=0;
   },{passive:false});
 
+  // Lock app height once on load so keyboard open/close doesn't resize the canvas
+  const lockAppHeight = () => {
+    document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px');
+  };
+  lockAppHeight();
+
+  let _lastW = window.innerWidth;
   window.addEventListener('resize',()=>{
-    const W=mount.clientWidth,H=mount.clientHeight;
-    camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);
+    const newW = window.innerWidth;
+    // Only react to WIDTH changes (orientation flip) — ignore height-only changes (keyboard)
+    if(newW !== _lastW){
+      _lastW = newW;
+      lockAppHeight();
+      const W=mount.clientWidth, H=mount.clientHeight;
+      camera.aspect=W/H; camera.updateProjectionMatrix(); renderer.setSize(W,H);
+    }
   });
   requestAnimationFrame(loop);
 }
