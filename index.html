@@ -3073,8 +3073,10 @@ function init(){
   renderer.domElement.addEventListener('wheel',e=>{rad=Math.max(5,Math.min(28,rad+e.deltaY*.018));updateCam();},{passive:true});
 
   let tLast=null, tPinchD=null, tStartTime=0, tTotalMove=0;
+  let tIsPlacing = false; // true when finger is down in placement mode (not orbiting)
   const TAP_THRESHOLD = 18;
   const TAP_MAX_MS    = 300;
+  const ORBIT_THRESHOLD = 12; // px of movement before we switch to orbit
 
   renderer.domElement.addEventListener('touchstart',e=>{
     e.preventDefault();
@@ -3086,8 +3088,22 @@ function init(){
       tTotalMove=0;
       tStartTime=Date.now();
       tPinchD=null;
+      tIsPlacing = !deleteMode; // start in placing mode until proven orbit
+
+      // Show ghost immediately on touch down
+      if(!deleteMode){
+        if(WALL_IDS.has(sel.id)){
+          const wp=getWallPos(t.clientX,t.clientY);
+          if(wp) showWallGhost(wp.gx,wp.gy,wp.wall);
+        } else {
+          const fp=getFloorPos(t.clientX,t.clientY);
+          showFloorGhost(fp.gx,fp.gz,fp.gy);
+        }
+      }
     } else if(e.touches.length===2){
       dragging=true;
+      tIsPlacing=false;
+      clearGhost();
       tPinchD=Math.hypot(
         e.touches[0].clientX-e.touches[1].clientX,
         e.touches[0].clientY-e.touches[1].clientY
@@ -3098,7 +3114,8 @@ function init(){
   renderer.domElement.addEventListener('touchmove',e=>{
     e.preventDefault();
     if(e.touches.length===2 && tPinchD!==null){
-      dragging=true;
+      dragging=true; tIsPlacing=false;
+      clearGhost();
       const d=Math.hypot(
         e.touches[0].clientX-e.touches[1].clientX,
         e.touches[0].clientY-e.touches[1].clientY
@@ -3110,8 +3127,28 @@ function init(){
       const t=e.touches[0];
       const dx=t.clientX-tLast.x, dy=t.clientY-tLast.y;
       tTotalMove += Math.hypot(dx,dy);
-      if(tTotalMove > TAP_THRESHOLD){
+
+      if(tIsPlacing && tTotalMove > ORBIT_THRESHOLD){
+        // Crossed into orbit territory — switch to camera drag, clear ghost
+        tIsPlacing=false;
         dragging=true;
+        clearGhost();
+      }
+
+      if(tIsPlacing){
+        // Still in placement mode — update ghost position
+        if(deleteMode){
+          const item = getHoveredPlacedItem(t.clientX, t.clientY);
+          setDeleteHover(item);
+        } else if(WALL_IDS.has(sel.id)){
+          const wp=getWallPos(t.clientX,t.clientY);
+          if(wp) showWallGhost(wp.gx,wp.gy,wp.wall); else clearGhost();
+        } else {
+          const fp=getFloorPos(t.clientX,t.clientY);
+          showFloorGhost(fp.gx,fp.gz,fp.gy);
+        }
+      } else {
+        // Orbiting
         theta-=dx*.007;
         phi=Math.max(.08,Math.min(Math.PI/2.02,phi+dy*.007));
         updateCam();
@@ -3123,12 +3160,17 @@ function init(){
   renderer.domElement.addEventListener('touchend',e=>{
     e.preventDefault();
     const elapsed = Date.now() - tStartTime;
-    const isTap = !dragging && tTotalMove < TAP_THRESHOLD && elapsed < TAP_MAX_MS;
-    if(isTap && e.changedTouches.length===1){
+    const wasTap = !dragging && tTotalMove < TAP_THRESHOLD && elapsed < TAP_MAX_MS;
+    const wasPlacing = tIsPlacing;
+
+    clearGhost();
+
+    if((wasTap || wasPlacing) && e.changedTouches.length===1){
       const t=e.changedTouches[0];
       if(deleteMode){
         const item = getHoveredPlacedItem(t.clientX, t.clientY);
         if(item) deleteItem(item);
+        else clearDeleteHover();
       } else if(WALL_IDS.has(sel.id)){
         const wp=getWallPos(t.clientX,t.clientY);
         if(wp) placeWall(wp.gx,wp.gy,wp.wall);
@@ -3137,7 +3179,7 @@ function init(){
         placeFloor(fp.gx,fp.gz,fp.gy);
       }
     }
-    dragging=false; tLast=null; tTotalMove=0;
+    dragging=false; tIsPlacing=false; tLast=null; tTotalMove=0;
   },{passive:false});
 
   window.addEventListener('resize',()=>{
