@@ -9,9 +9,9 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#e8e0d0;--panel:#faf7f2;--border:#c4b89e;
-  --text:#26201a;--muted:#7a6e60;--accent:#b86e30;--abg:#fceedd;
-  --bottom-h:0px; /* set by JS on mobile */
+  --bg:#eceef0;--panel:#f6f7f9;--border:#c8cdd4;
+  --text:#1e2228;--muted:#6b7280;--accent:#4f7c6e;--abg:#e8f0ed;
+  --bottom-h:0px;
 }
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;display:flex;flex-direction:column}
 header{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
@@ -48,14 +48,47 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
 .cbtn{width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:rgba(250,247,242,.9);color:var(--text);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s;user-select:none;touch-action:manipulation}
 .cbtn:hover,.cbtn:active{background:var(--panel)}
 /* Persistent cat buttons on canvas */
-.catbtns{position:absolute;bottom:44px;right:12px;display:flex;flex-direction:column;gap:6px;z-index:10}
-.editbtns{position:absolute;bottom:44px;left:12px;display:flex;flex-direction:column;gap:6px;z-index:10}
-.catbtn{padding:7px 12px;border:1.5px solid var(--border);border-radius:20px;background:rgba(250,247,242,.92);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;touch-action:manipulation;white-space:nowrap}
-.catbtn:hover,.catbtn:active{background:var(--abg);border-color:var(--accent)}
-.catbtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.catbtn.danger:hover,.catbtn.danger:active{background:#fde8e8;border-color:#c04040;color:#c04040}
+.catbtns{position:absolute;bottom:44px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:10}
+.editbtns{position:absolute;bottom:44px;left:12px;display:flex;flex-direction:column;gap:8px;z-index:10}
+.catbtn{padding:8px 14px 8px 10px;border:1.5px solid var(--border);border-radius:24px;background:rgba(250,247,242,.96);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s cubic-bezier(.34,1.56,.64,1);touch-action:manipulation;white-space:nowrap;display:flex;align-items:center;gap:7px;box-shadow:none}
+.catbtn:hover{transform:scale(1.06);box-shadow:none}
+.catbtn:active{transform:scale(0.97)}
+.catbtn.active{background:linear-gradient(135deg,#e8841a,#c8601a);color:#fff;border-color:#c8601a;box-shadow:none}
+.catbtn.active .cat-emoji{filter:brightness(1.3)}
+.catbtn.danger{border-color:#e0b0a8}
+.catbtn.danger:hover{background:#fde8e8;border-color:#c04040;color:#c04040;transform:scale(1.04)}
+.cat-emoji{font-size:20px;line-height:1;transition:transform .2s}
+.catbtn:hover .cat-emoji{transform:rotate(-8deg) scale(1.15)}
 
-/* ── MOBILE BOTTOM PANEL ── */
+.cat-label{font-size:12px}
+.colour-swatches{display:flex;flex-wrap:wrap;gap:5px}
+.swatch{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:all .12s;flex-shrink:0}
+.swatch:hover{transform:scale(1.15);border-color:var(--accent)}
+.swatch.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(184,110,48,.25)}
+.colorgrid{display:flex;flex-wrap:wrap;gap:4px}
+.colorswatch{width:22px;height:22px;border-radius:5px;border:2px solid transparent;cursor:pointer;transition:all .12s;flex-shrink:0}
+.colorswatch:hover{transform:scale(1.15)}
+.colorswatch.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(184,110,48,.25)}
+
+/* ── SPEECH BUBBLES ── */
+.speech-bubble{
+  position:absolute;pointer-events:none;z-index:20;
+  background:#fff;border:1.5px solid #d0c8b8;border-radius:12px;
+  padding:5px 9px;font-size:11px;font-family:'DM Sans',sans-serif;
+  color:#2a2018;white-space:nowrap;line-height:1.3;
+  box-shadow:0 2px 8px rgba(0,0,0,.10);
+  transition:opacity .35s;
+  transform:translate(-50%,-100%);
+  margin-top:-10px;
+}
+.speech-bubble::after{
+  content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
+  border:4px solid transparent;border-top-color:#d0c8b8;
+}
+.speech-bubble::before{
+  content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);
+  border:4px solid transparent;border-top-color:#fff;z-index:1;
+}
 .mobile-bottom{display:none;flex-direction:column;background:var(--panel);border-top:1px solid var(--border);flex-shrink:0;z-index:20}
 .mob-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
 .mob-tabs::-webkit-scrollbar{display:none}
@@ -105,7 +138,6 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
     <div class="sec">
       <div class="slabel">📦 Floor furniture</div>
       <div id="pg-floor" class="pgrid"></div>
-
     </div>
 
     <div class="sec">
@@ -113,16 +145,33 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
       <div id="pg-wall" class="pgrid"></div>
     </div>
 
-    <div class="sec" style="flex:1">
-      <div class="slabel">Tips</div>
-      <div style="font-size:10.5px;color:var(--muted);line-height:1.75">
-        Hover over the <b>floor</b> or <b>back wall</b> to place.<br><br>
-        Drag to orbit · Scroll to zoom
+    <div class="sec">
+      <div class="slabel">🎨 Room colours</div>
+      <div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:5px">WALLS</div>
+      <div class="colour-swatches" id="wall-swatches">
+        <div class="swatch" data-target="wall" data-hex="#f2f4f6" style="background:#f2f4f6" onclick="setRoomColour('wall','#f2f4f6')" title="Cool White"></div>
+        <div class="swatch" data-target="wall" data-hex="#dde4ec" style="background:#dde4ec" onclick="setRoomColour('wall','#dde4ec')" title="Slate Blue"></div>
+        <div class="swatch" data-target="wall" data-hex="#d8e4dc" style="background:#d8e4dc" onclick="setRoomColour('wall','#d8e4dc')" title="Sage"></div>
+        <div class="swatch" data-target="wall" data-hex="#e4dded" style="background:#e4dded" onclick="setRoomColour('wall','#e4dded')" title="Lavender"></div>
+        <div class="swatch" data-target="wall" data-hex="#f0e8e0" style="background:#f0e8e0" onclick="setRoomColour('wall','#f0e8e0')" title="Warm White"></div>
       </div>
+      <div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;margin:8px 0 5px">FLOOR</div>
+      <div class="colour-swatches" id="floor-swatches">
+        <div class="swatch" data-target="floor" data-hex="#e8eaec" style="background:#e8eaec" onclick="setRoomColour('floor','#e8eaec')" title="Cool Grey"></div>
+        <div class="swatch" data-target="floor" data-hex="#dde4dc" style="background:#dde4dc" onclick="setRoomColour('floor','#dde4dc')" title="Sage"></div>
+        <div class="swatch" data-target="floor" data-hex="#e4ddd4" style="background:#e4ddd4" onclick="setRoomColour('floor','#e4ddd4')" title="Stone"></div>
+        <div class="swatch" data-target="floor" data-hex="#d8dce4" style="background:#d8dce4" onclick="setRoomColour('floor','#d8dce4')" title="Slate"></div>
+        <div class="swatch" data-target="floor" data-hex="#ece8e0" style="background:#ece8e0" onclick="setRoomColour('floor','#ece8e0')" title="Linen"></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="slabel">Tips</div>
+      <div style="font-size:10.5px;color:var(--muted);line-height:1.6">Hover the <b>floor</b> or <b>back wall</b> to place · Drag to orbit · Scroll to zoom</div>
     </div>
   </div>
 
-  <!-- ── MOBILE BOTTOM PANEL ── -->
+    <!-- ── MOBILE BOTTOM PANEL ── -->
   <div class="mobile-bottom" id="mobile-bottom">
     <div class="mob-tabs">
       <button class="mob-tab on" id="mtab-floor" onclick="mobTab('floor')">
@@ -131,9 +180,36 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
       <button class="mob-tab" id="mtab-wall" onclick="mobTab('wall')">
         <span class="tab-icon">🧱</span>WALL
       </button>
+      <button class="mob-tab" id="mtab-colours" onclick="mobTab('colours')">
+        <span class="tab-icon">🎨</span>COLOURS
+      </button>
     </div>
     <div class="mob-panel on" id="mpanel-floor"></div>
     <div class="mob-panel" id="mpanel-wall"></div>
+    <div class="mob-panel" id="mpanel-colours">
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:4px 0;width:100%">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:5px">WALLS</div>
+          <div class="colour-swatches" id="mob-wall-swatches" style="flex-wrap:wrap">
+            <div class="swatch" data-target="wall" data-hex="#f0cee0" style="background:#F0CEE0" onclick="setRoomColour('wall','#f0cee0')" title="Pink"></div>
+        <div class="swatch" data-target="wall" data-hex="#f7d8c4" style="background:#F7D8C4" onclick="setRoomColour('wall','#f7d8c4')" title="Peach"></div>
+        <div class="swatch" data-target="wall" data-hex="#c6d4c3" style="background:#C6D4C3" onclick="setRoomColour('wall','#c6d4c3')" title="Sage"></div>
+        <div class="swatch" data-target="wall" data-hex="#d1c2da" style="background:#D1C2DA" onclick="setRoomColour('wall','#d1c2da')" title="Lavender"></div>
+        <div class="swatch" data-target="wall" data-hex="#cae1fc" style="background:#CAE1FC" onclick="setRoomColour('wall','#cae1fc')" title="Blue"></div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:5px">FLOOR</div>
+          <div class="colour-swatches" id="mob-floor-swatches" style="flex-wrap:wrap">
+            <div class="swatch" data-target="floor" data-hex="#f0cee0" style="background:#F0CEE0" onclick="setRoomColour('floor','#f0cee0')" title="Pink"></div>
+        <div class="swatch" data-target="floor" data-hex="#f7d8c4" style="background:#F7D8C4" onclick="setRoomColour('floor','#f7d8c4')" title="Peach"></div>
+        <div class="swatch" data-target="floor" data-hex="#c6d4c3" style="background:#C6D4C3" onclick="setRoomColour('floor','#c6d4c3')" title="Sage"></div>
+        <div class="swatch" data-target="floor" data-hex="#d1c2da" style="background:#D1C2DA" onclick="setRoomColour('floor','#d1c2da')" title="Lavender"></div>
+        <div class="swatch" data-target="floor" data-hex="#cae1fc" style="background:#CAE1FC" onclick="setRoomColour('floor','#cae1fc')" title="Blue"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="canvas-area">
@@ -161,10 +237,14 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
       <button class="catbtn" onclick="undoLast()">↩ Undo</button>
       <button class="catbtn danger" onclick="clearAll()">✕ Clear</button>
     </div>
-    <!-- Cat buttons bottom-right -->
+    <!-- Cat buttons bottom-right — cute pill style -->
     <div class="catbtns" id="catbtns">
-      <button class="catbtn" id="canvas-btn-winston" onclick="toggleCat('winston')">🐱 Winston</button>
-      <button class="catbtn" id="canvas-btn-griffey" onclick="toggleCat('griffey')">🐈 Griffey</button>
+      <button class="catbtn" id="canvas-btn-winston" onclick="toggleCat('winston')">
+        <span class="cat-emoji">🐈</span><span class="cat-label">Add Winston</span>
+      </button>
+      <button class="catbtn" id="canvas-btn-griffey" onclick="toggleCat('griffey')">
+        <span class="cat-emoji">🐈‍⬛</span><span class="cat-label">Add Griffey</span>
+      </button>
     </div>
   </div>
 </div>
@@ -173,12 +253,11 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
 // ═══════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════
-const ROOM   = 8;   // floor is ROOM×ROOM, walls are ROOM wide × WALL_H tall
+const ROOM   = 8;
 const WALL_H = 5;
-const CAT_FOOT = 0.23; // distance from cat group origin to bottom of paws (paws at y=-0.23 in local space)
-const UNIT   = 1;   // 1 grid unit = 1 Three.js unit
+const CAT_FOOT = 0.23;
+const UNIT   = 1;
 
-// All pieces share the same unit scale so boxes and shelves look consistent
 const FLOOR_PIECES = [
   {id:'f_lg',     name:'Large',   type:'floor', w:2, h:2,   d:2},
   {id:'f_sm',     name:'Small',   type:'floor', w:1, h:1,   d:1},
@@ -186,23 +265,28 @@ const FLOOR_PIECES = [
   {id:'f_tall',   name:'Tower',   type:'floor', w:1, h:3,   d:1},
   {id:'f_tunnel',  name:'Tunnel →', type:'floor', w:2, h:1, d:1},
   {id:'f_tunnelx', name:'Tunnel ↑', type:'floor', w:1, h:1, d:2},
-  {id:'f_plant',  name:'Cat grass',type:'floor',w:1, h:1.5, d:1},
+  {id:'f_plant',    name:'Cat grass', type:'floor', w:1,   h:1.5, d:1},
+  {id:'f_fountain', name:'Fountain',   type:'floor', w:1,   h:1.2, d:1},
+  {id:'f_bowl',     name:'Food bowl',  type:'floor', w:1,   h:0.3, d:1},
+  {id:'f_bed',      name:'Cat bed',    type:'floor', w:1,   h:0.3, d:1},
 ];
-const TUNNEL_IDS = new Set(['f_tunnel','f_tunnelx']);
-const PLANT_IDS  = new Set(['f_plant']);
+const TUNNEL_IDS   = new Set(['f_tunnel','f_tunnelx']);
+const PLANT_IDS    = new Set(['f_plant']);
+const SPECIAL_IDS  = new Set(['f_plant','f_fountain','f_bowl']);
+const BED_IDS      = new Set(['f_bed']);
 
-// Wall pieces: mounted on back wall (z=0 plane). w=wall-width, h=height, d=depth outward.
 const WALL_PIECES = [
-  {id:'w_shelf',   name:'Shelf',      type:'wall', w:2,   h:0.2, d:0.6},
-  {id:'w_wide',    name:'Wide shelf', type:'wall', w:3,   h:0.2, d:0.6},
-  {id:'w_box',     name:'Cat box',    type:'wall', w:1,   h:1,   d:1  },
-  {id:'w_post',    name:'Scratcher',  type:'wall', w:0.5, h:2,   d:0.5},
-  {id:'w_ladder',  name:'Bridge',     type:'wall', w:3,   h:0.5, d:0.5},
-  {id:'w_hammock', name:'Hammock',    type:'wall', w:1.2, h:1.2, d:1.2},
-  {id:'w_window',  name:'Window',     type:'wall', w:2,   h:1.5, d:0.15},
+  {id:'w_shelf',   name:'Shelf',      type:'wall', w:2,   h:0.2,  d:0.6 },
+  {id:'w_wide',    name:'Wide shelf', type:'wall', w:3,   h:0.2,  d:0.6 },
+  {id:'w_box',     name:'Cat box',    type:'wall', w:1,   h:1,    d:1   },
+  {id:'w_post',    name:'Scratcher',  type:'wall', w:0.5, h:2,    d:0.5 },
+  {id:'w_ladder',  name:'Bridge',     type:'wall', w:3,   h:0.5,  d:0.5 },
+  {id:'w_hammock', name:'Hammock',    type:'wall', w:1.2, h:1.2,  d:1.2 },
+  {id:'w_window',  name:'Window',     type:'wall', w:2,   h:1.5,  d:0.15},
+  {id:'w_picture', name:'Chicken pic',type:'wall', w:0.8, h:0.8,  d:0.06},
 ];
 
-const BOX_IDS  = new Set(FLOOR_PIECES.map(p=>p.id));
+const BOX_IDS  = new Set(FLOOR_PIECES.filter(p=>!BED_IDS.has(p.id)).map(p=>p.id));
 const WALL_IDS = new Set(WALL_PIECES.map(p=>p.id));
 
 // ═══════════════════════════════════════════════════════════
@@ -218,56 +302,50 @@ const C = {
   wood:       0xd4a050,
   woodDark:   0x8a5820,
   rope:       0xb09060,
-  tunnelOuter:0x5a8a5a,  // dark green fabric tunnel
-  tunnelInner:0x1a2a1a,  // near-black interior
+  tunnelOuter:0x5a8a5a,
+  tunnelInner:0x1a2a1a,
   tunnelRing: 0x3a6a3a,
   grassGreen: 0x4a9040,
   grassLight: 0x7ab860,
   potClay:    0xc07848,
   potDark:    0x8a4828,
-  wallColor:  0xddd5c8,
-  floorColor: 0xc8bc98,
+  wallColor:  0xFEF3E2,
+  floorColor: 0xFEF3E2,
   roomEdge:   0x5a5040,
 };
 
 // ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
-let sel     = FLOOR_PIECES[1]; // default to Small box
-let placed  = [];      // {piece, gx, gy, gz, group, type:'floor'|'wall'}
+let sel     = FLOOR_PIECES[1];
+let placed  = [];
 let ghost   = null;
 let ghostTarget = {x:0,y:0,z:0};
 
-// Per-cat state — Winston and Griffey share the same system
 function makeCatState(){
   return {mesh:null, rig:null, T:0, phase:0, path:[], idx:0, pause:0, state:'idle', jump:null, active:false};
 }
 let cats = { winston: makeCatState(), griffey: makeCatState() };
-// Aliases so existing code still works
-let winston = null; // kept for legacy refs, always mirrors cats.winston.mesh
+let winston = null;
 let wT=0,wPhase=0,wPath=[],wIdx=0,wPause=0,wState='idle';
 
 let scene, camera, renderer;
-// Camera: isometric-ish angle to see floor + both walls
 let theta = -0.65, phi = 0.72, rad = 16;
 let dragging=false, mdx=0,mdy=0,lmx=0,lmy=0;
 
 const FLOOR_PLANE     = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
-const BACK_WALL_PLANE = new THREE.Plane(new THREE.Vector3(0,0,1), 0);  // back wall z=0
-const LEFT_WALL_PLANE = new THREE.Plane(new THREE.Vector3(1,0,0), 0);  // left wall x=0
-// Which wall is targeted — detected by mouse position relative to walls
-let wallTarget = 'back'; // 'back' | 'left'
+const BACK_WALL_PLANE = new THREE.Plane(new THREE.Vector3(0,0,1), 0);
+const LEFT_WALL_PLANE = new THREE.Plane(new THREE.Vector3(1,0,0), 0);
+let wallTarget = 'back';
 
 // ═══════════════════════════════════════════════════════════
-// ADJACENCY (floor boxes only)
+// ADJACENCY
 // ═══════════════════════════════════════════════════════════
 function seg(a0,al,b0,bl){ return a0<b0+bl-0.05 && a0+al>b0+0.05; }
 
 function getAdj(item){
   const {gx,gz,gy,piece:{w,h,d}} = item;
   const a={px:false,nx:false,pz:false,nz:false};
-
-  // Box-to-box holes
   for(const o of placed){
     if(o===item||!BOX_IDS.has(o.piece.id)) continue;
     const yOk = gy<o.gy+o.piece.h && gy+h>o.gy;
@@ -277,25 +355,18 @@ function getAdj(item){
     if(Math.abs((gz+d)-o.gz)<.05 && seg(gx,w,o.gx,o.piece.w)) a.pz=true;
     if(Math.abs(gz-(o.gz+o.piece.d))<.05 && seg(gx,w,o.gx,o.piece.w)) a.nz=true;
   }
-
-  // Wall-exit holes: if a box face is flush against the back wall (z=0)
-  // or left wall (x=0), open a hole so cats can step out onto wall furniture
-  if(gz <= 0.05) a.nz = true;       // back face flush with back wall
-  if(gx <= 0.05) a.nx = true;       // left face flush with left wall
-
+  if(gz <= 0.05) a.nz = true;
+  if(gx <= 0.05) a.nx = true;
   return a;
 }
 
 // ═══════════════════════════════════════════════════════════
 // FLOOR BOX BUILDER
-// Open-top box using BoxGeometry slabs — no ShapeGeometry,
-// no coplanar faces, no Z-fighting.
-// Holes are shown as a dark recessed cylinder inside the wall.
 // ═══════════════════════════════════════════════════════════
 function buildFloorBox(piece, adj, isGhost){
   const g = new THREE.Group();
   const {w,h,d} = piece;
-  const T = 0.05; // wall thickness
+  const T = 0.05;
 
   if(isGhost){
     const geo = new THREE.BoxGeometry(w,h,d);
@@ -304,7 +375,6 @@ function buildFloorBox(piece, adj, isGhost){
     return g;
   }
 
-  // Walls are semi-transparent so you can see the cat inside through the holes
   const mFront = new THREE.MeshLambertMaterial({color:C.cardFront, side:THREE.DoubleSide});
   const mSide  = new THREE.MeshLambertMaterial({color:C.cardSide,  side:THREE.DoubleSide});
   const mInner = new THREE.MeshLambertMaterial({color:C.cardInner, side:THREE.DoubleSide});
@@ -312,26 +382,22 @@ function buildFloorBox(piece, adj, isGhost){
   const mHole  = new THREE.MeshLambertMaterial({color:C.hole, side:THREE.DoubleSide});
   const mEdge  = new THREE.MeshLambertMaterial({color:C.cardEdge, transparent:true, opacity:0.7});
 
-  // ── FLOOR SLAB ──
   const floor = new THREE.Mesh(new THREE.BoxGeometry(w, T, d), mFloor);
   floor.position.y = -h/2 + T/2;
   floor.receiveShadow = true; floor.castShadow = true;
   g.add(floor);
 
-  // Helper: build a wall slab. If hasHole=true, cut it into a frame around the hole.
   function addWall(axis, sign, mat, intMat, hasHole){
     const isZ = axis==='z';
-    const fw = isZ ? w : d;  // face width
+    const fw = isZ ? w : d;
     const hR = Math.min(fw, h) * 0.34;
     const hCY = -h/2 + hR*1.4;
 
     if(!hasHole){
-      // Solid slab
       const geo = isZ ? new THREE.BoxGeometry(w,h,T) : new THREE.BoxGeometry(T,h,d);
       const slab = new THREE.Mesh(geo, mat);
       slab.position.set(isZ?0:sign*(w/2-T/2), 0, isZ?sign*(d/2-T/2):0);
       slab.castShadow=true; g.add(slab);
-      // Inner face plane
       const igi = isZ ? new THREE.PlaneGeometry(fw-T*2,h) : new THREE.PlaneGeometry(d-T*2,h);
       const ip = new THREE.Mesh(igi, intMat);
       if(isZ){
@@ -343,8 +409,6 @@ function buildFloorBox(piece, adj, isGhost){
       }
       g.add(ip);
     } else {
-      // Wall with real hole cut through it.
-      // Build using ShapeGeometry with a circular hole — single mesh, no strips.
       const shape = new THREE.Shape();
       shape.moveTo(-fw/2, -h/2);
       shape.lineTo( fw/2, -h/2);
@@ -356,30 +420,23 @@ function buildFloorBox(piece, adj, isGhost){
       shape.holes.push(holePath);
 
       const faceGeo = new THREE.ShapeGeometry(shape, 32);
-      // Exterior face
       const extFace = new THREE.Mesh(faceGeo, mat);
       extFace.position.set(isZ?0:sign*(w/2), 0, isZ?sign*(d/2):0);
       extFace.rotation.y = isZ ? (sign>0?0:Math.PI) : (sign>0?-Math.PI/2:Math.PI/2);
       extFace.castShadow=true; g.add(extFace);
-      // Interior face (same shape, flipped)
       const intFace = new THREE.Mesh(faceGeo, intMat);
       intFace.position.set(isZ?0:sign*(w/2), 0, isZ?sign*(d/2):0);
       intFace.rotation.y = isZ ? (sign>0?Math.PI:0) : (sign>0?Math.PI/2:-Math.PI/2);
       g.add(intFace);
-      // No disc — hole is a real opening, cat visible through it
     }
   }
 
   const mI = new THREE.MeshLambertMaterial({color:C.cardInner, side:THREE.FrontSide});
-  // Every wall always has a hole - cats can exit any side
   addWall('z',+1, mFront, mI, true);
   addWall('z',-1, mSide,  mI, true);
   addWall('x',+1, mSide,  mI, true);
   addWall('x',-1, mSide,  mI, true);
 
-
-
-  // ── RIM LINES ──
   const rimM = new THREE.LineBasicMaterial({color:C.cardEdge, transparent:true, opacity:0.6});
   const rim = [
     new THREE.Vector3(-w/2,h/2,-d/2), new THREE.Vector3(w/2,h/2,-d/2),
@@ -393,10 +450,10 @@ function buildFloorBox(piece, adj, isGhost){
 
 // ═══════════════════════════════════════════════════════════
 // WALL FURNITURE BUILDER
-// Mounted on back wall (z=0). Sticks out toward camera.
 // ═══════════════════════════════════════════════════════════
 function buildWallPiece(piece, isGhost){
   if(piece.id==='w_window') return buildWindow(piece, isGhost);
+  if(piece.id==='w_picture') return buildPictureFrame(piece, isGhost);
   const g = new THREE.Group();
   const {w,h,d} = piece;
   const op = isGhost ? 0.3 : 1;
@@ -405,10 +462,8 @@ function buildWallPiece(piece, isGhost){
   const darkM = new THREE.MeshLambertMaterial({color:C.woodDark,transparent:op<1,opacity:op,side:THREE.DoubleSide});
 
   if(piece.id==='w_shelf'||piece.id==='w_wide'){
-    // Flat plank
     const plank=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),woodM);
     plank.castShadow=true; plank.receiveShadow=true; g.add(plank);
-    // Two L-brackets underneath
     if(!isGhost){
       for(const bx of [-w/2+0.2, w/2-0.2]){
         const bk=new THREE.Mesh(new THREE.BoxGeometry(0.08,h*4,0.08),darkM);
@@ -420,9 +475,7 @@ function buildWallPiece(piece, isGhost){
     g.add(edges(new THREE.BoxGeometry(w,h,d)));
   }
   else if(piece.id==='w_box'){
-    // Wall-mounted cat box — wood panels, circular hole on front
     const panM=new THREE.MeshLambertMaterial({color:C.wood,transparent:op<1,opacity:op});
-    // top/bottom/left/right panels
     for(const [geo,pos] of [
       [new THREE.BoxGeometry(w,h*.06,d),[0,h/2,0]],
       [new THREE.BoxGeometry(w,h*.06,d),[0,-h/2,0]],
@@ -431,7 +484,6 @@ function buildWallPiece(piece, isGhost){
     ]){
       const m=new THREE.Mesh(geo,panM); m.position.set(...pos); m.castShadow=true; g.add(m);
     }
-    // Front face with hole
     const hR=Math.min(w,h)*0.3;
     const shape=new THREE.Shape();
     shape.moveTo(-w/2,-h/2);shape.lineTo(w/2,-h/2);shape.lineTo(w/2,h/2);shape.lineTo(-w/2,h/2);shape.closePath();
@@ -443,7 +495,6 @@ function buildWallPiece(piece, isGhost){
       disc.position.z=d/2-.04; g.add(disc);
       const ring=new THREE.Mesh(new THREE.RingGeometry(hR,hR+.045,28),new THREE.MeshLambertMaterial({color:C.woodDark,side:THREE.DoubleSide,transparent:true,opacity:.9}));
       ring.position.z=d/2+.01; g.add(ring);
-      // Wood grain lines on front
       const gm=new THREE.LineBasicMaterial({color:C.woodDark,transparent:true,opacity:.18});
       for(let i=0;i<5;i++){
         const y=-h/2+(i+.5)*h/5;
@@ -453,7 +504,6 @@ function buildWallPiece(piece, isGhost){
     g.add(edges(new THREE.BoxGeometry(w,h,d)));
   }
   else if(piece.id==='w_post'){
-    // Scratching post — cylinder with rope wraps
     const postM=new THREE.MeshLambertMaterial({color:C.rope,transparent:op<1,opacity:op});
     const post=new THREE.Mesh(new THREE.CylinderGeometry(w/2,w/2,h,12),postM);
     post.castShadow=true; g.add(post);
@@ -469,22 +519,17 @@ function buildWallPiece(piece, isGhost){
     br.position.set(0,-h/2,0); g.add(br);
   }
   else if(piece.id==='w_ladder'){
-    // Rope bridge: small wooden slats threaded on two parallel ropes,
-    // sagging in a catenary curve between two anchor points.
-    // Like the product image — horizontal bridge on the wall.
     const slatM  = new THREE.MeshLambertMaterial({color:C.wood,    transparent:op<1,opacity:op});
     const ropeM  = new THREE.MeshLambertMaterial({color:0xc8a850,  transparent:op<1,opacity:op});
     const mountM = new THREE.MeshLambertMaterial({color:C.woodDark, transparent:op<1,opacity:op});
 
-    const bridgeW = w;       // total width of bridge along X
-    const slatCount = 10;    // number of wooden steps
-    const ropeSpacing = 0.18; // gap between the two ropes (front/back)
-    const sag = 0.22;        // how much bridge droops in middle
+    const bridgeW = w;
+    const slatCount = 10;
+    const ropeSpacing = 0.18;
+    const sag = 0.22;
 
-    // Catenary curve: y = sag * (cosh(x/a)-1) approximated as parabola
-    function bridgeY(t){ return -sag * 4 * t * (1-t); } // t in [0,1], peaks at ends, dips in middle
+    function bridgeY(t){ return -sag * 4 * t * (1-t); }
 
-    // Two ropes — draw as thin cylinders between each slat
     if(!isGhost){
       for(let rope=0;rope<2;rope++){
         const rz = (rope===0 ? -ropeSpacing/2 : ropeSpacing/2);
@@ -503,7 +548,6 @@ function buildWallPiece(piece, isGhost){
       }
     }
 
-    // Wooden slats — small flat planks across the bridge
     for(let i=0;i<slatCount;i++){
       const t = (i+0.5)/slatCount;
       const sx = (t-0.5)*bridgeW;
@@ -517,14 +561,12 @@ function buildWallPiece(piece, isGhost){
       g.add(slat);
     }
 
-    // Wall anchor blocks at each end
     if(!isGhost){
       for(const side of [-1,1]){
         const ax = side * bridgeW/2;
         const anch = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.22, 0.18), mountM);
         anch.position.set(ax, 0, -ropeSpacing*0.4);
         g.add(anch);
-        // Screw
         const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.025,6), mountM);
         screw.rotation.x = Math.PI/2;
         screw.position.set(ax, 0.04, -0.1);
@@ -533,21 +575,16 @@ function buildWallPiece(piece, isGhost){
     }
   }
   else if(piece.id==='w_hammock'){
-    // Wall hammock: a thin circular wooden RIM (like a hoop/drum frame) mounted
-    // on the wall. Fabric hangs inside it forming a bowl. No torus — just a slim
-    // disc rim made from a cylinder, with fabric sagging inside.
     const frameM  = new THREE.MeshLambertMaterial({color:C.wood,    transparent:op<1,opacity:op});
     const fabricM = new THREE.MeshLambertMaterial({color:0xd4c8b8,  transparent:true, opacity:isGhost?0.28:0.92, side:THREE.DoubleSide});
     const mountM  = new THREE.MeshLambertMaterial({color:C.woodDark, transparent:op<1,opacity:op});
 
-    const R = 0.55; // radius of hoop
+    const R = 0.55;
 
-    // Rim: thin hollow cylinder — just the edge, like a drum rim
     const outerR = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 0.06, 32, 1, false), frameM);
     outerR.castShadow=true;
     g.add(outerR);
 
-    // Top cap and bottom cap to close the cylinder edges
     for(const sy of [0.03, -0.03]){
       const cap = new THREE.Mesh(
         new THREE.RingGeometry(R-0.07, R, 32),
@@ -558,11 +595,10 @@ function buildWallPiece(piece, isGhost){
       g.add(cap);
     }
 
-    // Fabric bowl inside — radial mesh sagging downward
     if(!isGhost){
       const segs=20, rings=5, sag=0.28;
       const verts=[], tris=[];
-      verts.push(0,-sag,0); // centre
+      verts.push(0,-sag,0);
       for(let r=1;r<=rings;r++){
         const rr=(r/rings)*(R-0.07);
         const ry2=-sag*(1-Math.pow(r/rings,2));
@@ -585,7 +621,6 @@ function buildWallPiece(piece, isGhost){
       fg.computeVertexNormals();
       g.add(new THREE.Mesh(fg, fabricM));
 
-      // Two small wall-mount blocks on the back of the rim
       for(const sx of [-R*0.6, R*0.6]){
         const brk=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.1,0.14), mountM);
         brk.position.set(sx, 0, -R*0.8);
@@ -606,14 +641,11 @@ function buildWallPiece(piece, isGhost){
 }
 
 // ── WINDOW SCENE TEXTURE ──
-// Painted onto a canvas: blue sky, fluffy clouds, a tree, two birds on the sill.
-// ── ANIMATED WINDOW TEXTURE ──
 const _winCanvas = document.createElement('canvas');
 _winCanvas.width=256; _winCanvas.height=192;
 let _winTex = null;
 let _winT = 0;
 
-// Birds: sit on sill, then fly a looping arc across the sky and land back
 const W2=256, H2=192;
 const _birds = [
   {x:55,  y:H2-14, vx:0, vy:0, phase:0, onSill:true, flip:false, waitT:80,  sillX:55},
@@ -621,32 +653,28 @@ const _birds = [
 ];
 
 function tickWindowAnim(){
-  _winT += 0.016; // faster time base
+  _winT += 0.016;
 
   _birds.forEach(b=>{
     if(b.onSill){
       b.waitT--;
       if(b.waitT<=0){
         b.onSill = false;
-        // Launch: fast horizontal with upward kick
         const dir = b.flip ? -1 : 1;
         b.vx = dir * (2.5 + Math.random());
         b.vy = -(2.0 + Math.random()*1.5);
         b.phase = 0;
-        b.flip = !b.flip; // face direction of travel
+        b.flip = !b.flip;
       }
     } else {
-      b.phase += 0.45; // fast wing flap
+      b.phase += 0.45;
       b.x += b.vx;
       b.y += b.vy;
-      b.vy += 0.06;  // stronger gravity so arc is visible
-      // Subtle direction changes mid-flight
+      b.vy += 0.06;
       b.vx += (Math.random()-0.5)*0.15;
       b.vx = Math.max(-4, Math.min(4, b.vx));
       b.vy = Math.max(-4, Math.min(3, b.vy));
-      // Face direction of travel
       b.flip = b.vx < 0;
-      // Land when back near sill height and slowing down
       if(b.y >= H2-16 && Math.abs(b.vy) < 2){
         b.onSill = true;
         b.x = b.sillX + (Math.random()-0.5)*20;
@@ -654,12 +682,10 @@ function tickWindowAnim(){
         b.y = H2-14;
         b.vx=0; b.vy=0;
         b.waitT = 120 + Math.floor(Math.random()*250);
-        b.flip = b.x > W2/2; // face centre
+        b.flip = b.x > W2/2;
       }
-      // Wrap horizontally so they come back from the other side
       if(b.x < -20) b.x = W2+10;
       if(b.x > W2+20) b.x = -10;
-      // Bounce gently off top
       if(b.y < 8){ b.y=8; b.vy = Math.abs(b.vy)*0.5; }
     }
   });
@@ -670,16 +696,13 @@ function drawWindowScene(){
   const c=_winCanvas.getContext('2d');
   c.clearRect(0,0,W,H);
 
-  // Sky
   const sky=c.createLinearGradient(0,0,0,H*0.75);
   sky.addColorStop(0,'#7ec8e3'); sky.addColorStop(1,'#d4eef7');
   c.fillStyle=sky; c.fillRect(0,0,W,H*0.75);
 
-  // Ground
   c.fillStyle='#8ab870'; c.fillRect(0,H*0.72,W,H*0.28);
   c.fillStyle='#a8d090'; c.fillRect(0,H*0.72,W,8);
 
-  // Animated clouds — drift slowly right, wrap around
   function cloud(x,y,s){
     c.fillStyle='rgba(255,255,255,0.92)';
     [[0,0,28],[22,4,22],[44,0,26],[-18,4,20]].forEach(([dx,dy,r])=>{
@@ -691,12 +714,10 @@ function drawWindowScene(){
   cloud(((170+ ct*5)  % (W+80))-40, 25, 0.42);
   cloud(((120+ ct*11) % (W+80))-40, 55, 0.35);
 
-  // Distant hills
   c.fillStyle='#90b878';
   c.beginPath(); c.ellipse(40,H*0.74,60,22,0,0,Math.PI*2); c.fill();
   c.beginPath(); c.ellipse(200,H*0.73,50,18,0,0,Math.PI*2); c.fill();
 
-  // Tree
   c.fillStyle='#7a5030';
   c.fillRect(W*0.72-8, H*0.42, 16, H*0.3);
   c.fillStyle='#3a7830';
@@ -708,36 +729,27 @@ function drawWindowScene(){
     c.beginPath(); c.arc(W*0.72+dx, H*0.38+dy, r, 0, Math.PI*2); c.fill();
   });
 
-  // Birds
   function drawBird(b){
     const {x,y,flip,onSill,phase} = b;
     c.save(); c.translate(x,y);
     if(flip) c.scale(-1,1);
     c.fillStyle='#2a1808';
-    // Wing flap when flying
     const wingA = onSill ? 0 : Math.sin(phase)*0.5;
-    // Body
     c.beginPath(); c.ellipse(0,0,7,4.5,0.2,0,Math.PI*2); c.fill();
-    // Head
     c.beginPath(); c.arc(6,-3,3.5,0,Math.PI*2); c.fill();
-    // Beak
     c.beginPath(); c.moveTo(9,-3); c.lineTo(13,-2); c.lineTo(9,-1); c.fill();
-    // Tail
     c.beginPath(); c.moveTo(-7,0); c.lineTo(-13,3); c.lineTo(-13,-1); c.fill();
-    // Wing (animated when flying)
     if(!onSill){
       c.beginPath();
       c.ellipse(-1, wingA*8-2, 6, 3, wingA-0.3, 0, Math.PI*2);
       c.fill();
     }
-    // Eye
     c.fillStyle='white';
     c.beginPath(); c.arc(7,-4,1,0,Math.PI*2); c.fill();
     c.restore();
   }
   _birds.forEach(drawBird);
 
-  // Sill
   c.fillStyle='#c8904a'; c.fillRect(0,H-8,W,8);
   c.fillStyle='#a06828'; c.fillRect(0,H-9,W,2);
 }
@@ -751,7 +763,6 @@ function windowTex(){
 }
 
 function tickWindow(){
-  // Only update if any window is placed
   const hasWindow = placed.some(it=>it.piece.id==='w_window');
   if(!hasWindow || !_winTex) return;
   tickWindowAnim();
@@ -759,12 +770,11 @@ function tickWindow(){
   _winTex.needsUpdate = true;
 }
 
-// ── WINDOW BUILDER ──
 function buildWindow(piece, isGhost){
   const g = new THREE.Group();
   const {w,h,d} = piece;
   const op = isGhost ? 0.35 : 1;
-  const frameM = new THREE.MeshLambertMaterial({color:0xf0e8d0, transparent:op<1, opacity:op}); // cream frame
+  const frameM = new THREE.MeshLambertMaterial({color:0xf0e8d0, transparent:op<1, opacity:op});
   const frameEdgeM = new THREE.MeshLambertMaterial({color:0xc0a060, transparent:op<1, opacity:op});
   const glassM = new THREE.MeshBasicMaterial({
     map: isGhost ? null : windowTex(),
@@ -773,30 +783,23 @@ function buildWindow(piece, isGhost){
     side: THREE.DoubleSide,
   });
 
-  // Outer frame — box with hollow centre (4 strips)
-  const fw = 0.1; // frame width
-  // Top bar
+  const fw = 0.1;
   const topBar = new THREE.Mesh(new THREE.BoxGeometry(w, fw, d), frameM);
   topBar.position.set(0, h/2-fw/2, 0); g.add(topBar);
-  // Bottom sill — slightly thicker and projects outward
   const sill = new THREE.Mesh(new THREE.BoxGeometry(w+0.1, fw*1.4, d+0.15), frameEdgeM);
   sill.position.set(0, -h/2+fw/2, 0.07);
   sill.castShadow=true; g.add(sill);
-  // Left bar
   const leftBar = new THREE.Mesh(new THREE.BoxGeometry(fw, h, d), frameM);
   leftBar.position.set(-w/2+fw/2, 0, 0); g.add(leftBar);
-  // Right bar
   const rightBar = new THREE.Mesh(new THREE.BoxGeometry(fw, h, d), frameM);
   rightBar.position.set(w/2-fw/2, 0, 0); g.add(rightBar);
 
-  // Window pane — scene texture
   const paneW = w - fw*2;
   const paneH = h - fw*2;
   const pane = new THREE.Mesh(new THREE.PlaneGeometry(paneW, paneH), glassM);
   pane.position.set(0, fw*0.3, d/2+0.001);
   g.add(pane);
 
-  // Cross divider (classic window cross)
   if(!isGhost){
     const barM = new THREE.MeshLambertMaterial({color:0xe8ddc0});
     const hBar = new THREE.Mesh(new THREE.BoxGeometry(paneW, fw*0.6, d*0.5), barM);
@@ -806,7 +809,6 @@ function buildWindow(piece, isGhost){
     vBar.position.set(0, fw*0.3, d/2+0.002);
     g.add(vBar);
 
-    // Wall mount brackets
     for(const sx of [-w/2+0.15, w/2-0.15]){
       const brk = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.14), frameEdgeM);
       brk.position.set(sx, 0, -d/2-0.04);
@@ -818,6 +820,317 @@ function buildWindow(piece, isGhost){
     g.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w,h,d)),
       new THREE.LineBasicMaterial({color:0xb86e30,transparent:true,opacity:.7})));
   }
+  return g;
+}
+
+// ── HAPPY CHICKEN PAINTING ──
+function makeChickenTex(){
+  const cv = document.createElement('canvas'); cv.width=128; cv.height=128;
+  const c = cv.getContext('2d');
+
+  // Sky background — cheerful blue gradient
+  const sky = c.createLinearGradient(0,0,0,128);
+  sky.addColorStop(0,'#87ceeb'); sky.addColorStop(1,'#d4eef7');
+  c.fillStyle=sky; c.fillRect(0,0,128,128);
+
+  // Green grass at bottom
+  c.fillStyle='#7ab848'; c.fillRect(0,88,128,40);
+  c.fillStyle='#96d058'; c.fillRect(0,88,128,8);
+
+  // Sun top-right
+  c.fillStyle='#ffe040';
+  c.beginPath(); c.arc(100,22,14,0,Math.PI*2); c.fill();
+  // Sun rays
+  c.strokeStyle='#ffe040'; c.lineWidth=2;
+  for(let i=0;i<8;i++){
+    const a=(i/8)*Math.PI*2;
+    c.beginPath();
+    c.moveTo(100+Math.cos(a)*16, 22+Math.sin(a)*16);
+    c.lineTo(100+Math.cos(a)*22, 22+Math.sin(a)*22);
+    c.stroke();
+  }
+
+  // ── CHICKEN BODY ──
+  // White fluffy body
+  c.fillStyle='#ffffff';
+  c.beginPath(); c.ellipse(58,75,22,18,0,0,Math.PI*2); c.fill();
+  // Wing detail
+  c.fillStyle='#e8e8e0';
+  c.beginPath(); c.ellipse(62,78,14,10,-0.3,0,Math.PI*2); c.fill();
+
+  // Head
+  c.fillStyle='#ffffff';
+  c.beginPath(); c.arc(58,52,13,0,Math.PI*2); c.fill();
+
+  // Comb — red spiky top
+  c.fillStyle='#e03030';
+  for(let i=0;i<3;i++){
+    const cx = 52+i*5;
+    c.beginPath(); c.ellipse(cx,40,3.5,6,0,0,Math.PI*2); c.fill();
+  }
+
+  // Wattle — red blob under beak
+  c.fillStyle='#e03030';
+  c.beginPath(); c.ellipse(68,57,4,5,0.3,0,Math.PI*2); c.fill();
+
+  // Beak — yellow triangle
+  c.fillStyle='#f0b020';
+  c.beginPath();
+  c.moveTo(70,51); c.lineTo(78,54); c.lineTo(70,57);
+  c.closePath(); c.fill();
+
+  // Happy eye — big white circle + pupil + shine + curved smile line
+  c.fillStyle='#ffffff';
+  c.beginPath(); c.arc(63,50,5,0,Math.PI*2); c.fill();
+  c.fillStyle='#1a1a1a';
+  c.beginPath(); c.arc(64,50,3,0,Math.PI*2); c.fill();
+  c.fillStyle='#ffffff';
+  c.beginPath(); c.arc(65,49,1,0,Math.PI*2); c.fill();
+
+  // Happy smile under beak
+  c.strokeStyle='#c08010'; c.lineWidth=1.5;
+  c.beginPath(); c.arc(68,55,4,0.1,0.9); c.stroke();
+
+  // Legs — orange sticks
+  c.strokeStyle='#e08020'; c.lineWidth=3; c.lineCap='round';
+  c.beginPath(); c.moveTo(50,92); c.lineTo(44,108); c.stroke();
+  c.beginPath(); c.moveTo(66,92); c.lineTo(72,108); c.stroke();
+  // Feet
+  c.lineWidth=2;
+  for(const [fx,fy] of [[44,108],[72,108]]){
+    c.beginPath(); c.moveTo(fx,fy); c.lineTo(fx-6,112); c.stroke();
+    c.beginPath(); c.moveTo(fx,fy); c.lineTo(fx+2,113); c.stroke();
+    c.beginPath(); c.moveTo(fx,fy); c.lineTo(fx+8,110); c.stroke();
+  }
+
+  // Little flowers in the grass
+  const flowerCols = ['#ff88aa','#ffcc44','#cc88ff'];
+  for(let i=0;i<5;i++){
+    const fx=18+i*22, fy=96;
+    c.fillStyle=flowerCols[i%3];
+    for(let p=0;p<5;p++){
+      const a=(p/5)*Math.PI*2;
+      c.beginPath(); c.arc(fx+Math.cos(a)*4,fy+Math.sin(a)*4,3,0,Math.PI*2); c.fill();
+    }
+    c.fillStyle='#ffee44';
+    c.beginPath(); c.arc(fx,fy,3,0,Math.PI*2); c.fill();
+  }
+
+  const tex = new THREE.CanvasTexture(cv);
+  return tex;
+}
+
+let _chickenTex = null;
+function chickenTex(){
+  if(!_chickenTex) _chickenTex = makeChickenTex();
+  return _chickenTex;
+}
+
+function buildPictureFrame(piece, isGhost){
+  const g = new THREE.Group();
+  const {w,h,d} = piece;
+  const op = isGhost ? 0.35 : 1;
+
+  const frameM = new THREE.MeshLambertMaterial({color:0x8b5e2a, transparent:op<1, opacity:op}); // warm wood frame
+  const frameDkM = new THREE.MeshLambertMaterial({color:0x5a3810, transparent:op<1, opacity:op}); // darker wood
+  const paintM = new THREE.MeshBasicMaterial({
+    map: isGhost ? null : chickenTex(),
+    color: isGhost ? 0xffee88 : 0xffffff,
+    transparent: isGhost, opacity: isGhost ? 0.5 : 1,
+    side: THREE.DoubleSide,
+  });
+
+  const fw = 0.07; // frame border width
+
+  // Frame backing board
+  const backing = new THREE.Mesh(new THREE.BoxGeometry(w, h, d*0.4), frameDkM);
+  backing.position.z = -d*0.1;
+  g.add(backing);
+
+  // Top bar
+  const barT = new THREE.Mesh(new THREE.BoxGeometry(w, fw, d), frameM);
+  barT.position.set(0, h/2-fw/2, 0); g.add(barT);
+  // Bottom bar
+  const barB = new THREE.Mesh(new THREE.BoxGeometry(w, fw, d), frameM);
+  barB.position.set(0, -h/2+fw/2, 0); g.add(barB);
+  // Left bar
+  const barL = new THREE.Mesh(new THREE.BoxGeometry(fw, h, d), frameM);
+  barL.position.set(-w/2+fw/2, 0, 0); g.add(barL);
+  // Right bar
+  const barR = new THREE.Mesh(new THREE.BoxGeometry(fw, h, d), frameM);
+  barR.position.set(w/2-fw/2, 0, 0); g.add(barR);
+
+  // Painting canvas — sits just inside the frame
+  const pw = w - fw*2 - 0.01;
+  const ph = h - fw*2 - 0.01;
+  const painting = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), paintM);
+  painting.position.z = d/2 + 0.002;
+  g.add(painting);
+
+  // Small nail/hook at top centre
+  if(!isGhost){
+    const nailM = new THREE.MeshLambertMaterial({color:0x888888});
+    const nail = new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,0.04,6), nailM);
+    nail.rotation.z = Math.PI/2;
+    nail.position.set(0, h/2+0.02, -d/2);
+    g.add(nail);
+  }
+
+  if(isGhost){
+    g.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(w,h,d)),
+      new THREE.LineBasicMaterial({color:0xb86e30,transparent:true,opacity:0.7})));
+  }
+  return g;
+}
+
+function buildFountain(piece, isGhost){
+  const g = new THREE.Group();
+  const op = isGhost ? 0.35 : 1;
+  const bodyM  = new THREE.MeshLambertMaterial({color:0xe8e4de, transparent:op<1, opacity:op});
+  const accentM= new THREE.MeshLambertMaterial({color:0x5a9ec8, transparent:op<1, opacity:op});
+  const waterM = new THREE.MeshLambertMaterial({color:0x7ac8f0, transparent:true, opacity:isGhost?0.2:0.65, side:THREE.DoubleSide});
+  const baseM  = new THREE.MeshLambertMaterial({color:0xd0ccc4, transparent:op<1, opacity:op});
+
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.47,0.05,28), baseM);
+  base.position.y=0.025; base.castShadow=true; g.add(base);
+
+  const res = new THREE.Mesh(new THREE.CylinderGeometry(0.43,0.47,0.18,28,1,true), bodyM);
+  res.position.y=0.115; res.castShadow=true; g.add(res);
+
+  const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.26,0.16,24,1,true), bodyM);
+  inner.position.y=0.105; g.add(inner);
+
+  const shape = new THREE.RingGeometry(0.25,0.43,28);
+  const resFloor = new THREE.Mesh(shape, bodyM);
+  resFloor.rotation.x=-Math.PI/2; resFloor.position.y=0.055; g.add(resFloor);
+
+  if(!isGhost){
+    const moatWater = new THREE.Mesh(new THREE.RingGeometry(0.26,0.41,28), waterM);
+    moatWater.rotation.x=-Math.PI/2; moatWater.position.y=0.185; g.add(moatWater);
+  }
+
+  const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.10,0.13,0.52,18), bodyM);
+  tower.position.y=0.31; tower.castShadow=true; g.add(tower);
+
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.18,0.04,20), accentM);
+  cap.position.y=0.57; cap.castShadow=true; g.add(cap);
+
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(0.12,16,8,0,Math.PI*2,0,Math.PI*0.5), bodyM);
+  dome.position.y=0.585; g.add(dome);
+
+  if(!isGhost){
+    const waterFall = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.19,0.28,0.30,20,1,true), waterM);
+    waterFall.position.y=0.43; g.add(waterFall);
+
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.115,0.018,6,20), accentM);
+    ring.rotation.x=Math.PI/2; ring.position.y=0.32; g.add(ring);
+
+    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.016,0.016,0.12,6), baseM);
+    cord.rotation.x=Math.PI/2; cord.position.set(0,0.04,-0.45); g.add(cord);
+  }
+  return g;
+}
+
+function buildFoodBowl(piece, isGhost){
+  const g = new THREE.Group();
+  const op = isGhost ? 0.35 : 1;
+  const bowlM  = new THREE.MeshLambertMaterial({color:0xe05858, transparent:op<1, opacity:op});
+  const rimM   = new THREE.MeshLambertMaterial({color:0xc03838, transparent:op<1, opacity:op});
+  const foodM  = new THREE.MeshLambertMaterial({color:0xc87840, transparent:op<1, opacity:op});
+
+  const outer = new THREE.Mesh(new THREE.SphereGeometry(0.32,16,10,0,Math.PI*2,0,Math.PI*0.65), bowlM);
+  outer.scale.y = 0.55;
+  outer.position.y = -0.02; outer.castShadow=true; g.add(outer);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.30,0.03,6,20), rimM);
+  rim.rotation.x=Math.PI/2; rim.position.y=0.14; g.add(rim);
+  if(!isGhost){
+    const food = new THREE.Mesh(new THREE.CircleGeometry(0.26,16), foodM);
+    food.rotation.x=-Math.PI/2; food.position.y=0.13; g.add(food);
+    for(let i=0;i<8;i++){
+      const a=(i/8)*Math.PI*2, r=0.12+Math.random()*0.1;
+      const k = new THREE.Mesh(new THREE.SphereGeometry(0.035,5,4),
+        new THREE.MeshLambertMaterial({color:0xb06830}));
+      k.position.set(Math.cos(a)*r, 0.15, Math.sin(a)*r);
+      g.add(k);
+    }
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.04,16), rimM);
+    base.position.y=-0.12; g.add(base);
+  }
+  return g;
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// CAT BED BUILDER — low donut calming bed
+// Thick padded torus bolster ring, flat cushion in the centre
+// ═══════════════════════════════════════════════════════════
+function buildCatBed(piece, isGhost){
+  const g = new THREE.Group();
+  const op = isGhost ? 0.35 : 1;
+
+  const bolsterM = new THREE.MeshLambertMaterial({color:0xa07858, transparent:op<1, opacity:op});
+  const bolsterLt= new THREE.MeshLambertMaterial({color:0xc8a880, transparent:op<1, opacity:op});
+  const cushionM = new THREE.MeshLambertMaterial({color:0xe8d8b8, transparent:op<1, opacity:op});
+  const cushionT = new THREE.MeshLambertMaterial({color:0xf8ecd8, transparent:op<1, opacity:op});
+  const baseM    = new THREE.MeshLambertMaterial({color:0x604838, transparent:op<1, opacity:op});
+
+  const Rm = 0.28; // radius to centre of bolster tube
+  const Br = 0.16; // bolster tube radius — thick and chunky
+  const Ri = Rm - Br + 0.02; // inner opening radius
+
+  if(isGhost){
+    const geo = new THREE.TorusGeometry(Rm, Br, 8, 24);
+    const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:0xa07858,transparent:true,opacity:0.28}));
+    m.rotation.x = Math.PI/2; g.add(m);
+    return g;
+  }
+
+  // Thin base disc
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(Rm+Br+0.02, Rm+Br+0.02, 0.025, 28), baseM);
+  base.position.y = 0.012;
+  base.receiveShadow = true;
+  g.add(base);
+
+  // The bolster — a fat torus lying flat
+  const bolster = new THREE.Mesh(new THREE.TorusGeometry(Rm, Br, 14, 32), bolsterM);
+  bolster.rotation.x = Math.PI/2;
+  bolster.position.y = Br * 0.6;
+  bolster.castShadow = true;
+  g.add(bolster);
+
+  // Lighter highlight on top of bolster
+  const highlight = new THREE.Mesh(new THREE.TorusGeometry(Rm, Br * 0.45, 8, 32), bolsterLt);
+  highlight.rotation.x = Math.PI/2;
+  highlight.position.y = Br * 0.6 + Br * 0.55;
+  g.add(highlight);
+
+  // Cushion disc sitting in the centre hole
+  const cushion = new THREE.Mesh(new THREE.CylinderGeometry(Ri, Ri, 0.06, 20), cushionM);
+  cushion.position.y = 0.045;
+  g.add(cushion);
+
+  const cushTop = new THREE.Mesh(new THREE.CircleGeometry(Ri, 20), cushionT);
+  cushTop.rotation.x = -Math.PI/2;
+  cushTop.position.y = 0.076;
+  g.add(cushTop);
+
+  // Centre button + seams
+  const btnM = new THREE.MeshLambertMaterial({color:0x907050});
+  const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.015, 8), btnM);
+  btn.position.y = 0.084;
+  g.add(btn);
+
+  const seamM = new THREE.LineBasicMaterial({color:0xc0a878, transparent:true, opacity:0.65});
+  for(let i=0; i<6; i++){
+    const a = (i/6)*Math.PI*2;
+    g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0.078, 0),
+      new THREE.Vector3(Math.cos(a)*(Ri-0.03), 0.078, Math.sin(a)*(Ri-0.03)),
+    ]), seamM));
+  }
+
   return g;
 }
 
@@ -840,8 +1153,6 @@ function stackH(gx,gz,pw,pd){
 
 // ═══════════════════════════════════════════════════════════
 // TUNNEL BUILDER
-// A fabric cat tunnel — cylinder with open circular ends.
-// Runs along the Z axis (depth direction).
 // ═══════════════════════════════════════════════════════════
 function buildTunnel(piece, isGhost){
   const g = new THREE.Group();
@@ -849,9 +1160,7 @@ function buildTunnel(piece, isGhost){
   const r = h/2;
   const op = isGhost ? 0.30 : 1;
   const col = isGhost ? 0x5a8a5a : C.tunnelOuter;
-  // Length of tunnel: for → tunnel w=3 is the long side; for ↑ tunnel d=3 is the long side
   const len = piece.id==='f_tunnelx' ? piece.d : piece.w;
-  // Axis: f_tunnel runs along X (width), f_tunnelx runs along Z (depth)
   const alongZ = (piece.id==='f_tunnelx');
 
   const outerMat = new THREE.MeshLambertMaterial({
@@ -859,9 +1168,8 @@ function buildTunnel(piece, isGhost){
     transparent: true, opacity: isGhost ? op : 0.95,
   });
   const outer = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 20, 1, true), outerMat);
-  // Rotate cylinder to lay along correct axis
-  if(alongZ) outer.rotation.x = Math.PI/2;   // along Z
-  else        outer.rotation.z = Math.PI/2;   // along X
+  if(alongZ) outer.rotation.x = Math.PI/2;
+  else        outer.rotation.z = Math.PI/2;
   outer.castShadow = true;
   g.add(outer);
 
@@ -897,7 +1205,6 @@ function buildTunnel(piece, isGhost){
 
 // ═══════════════════════════════════════════════════════════
 // CAT GRASS PLANT BUILDER
-// Terracotta pot + upright grass blades. No torus/ring geometry.
 // ═══════════════════════════════════════════════════════════
 function buildPlant(piece, isGhost){
   const g = new THREE.Group();
@@ -915,7 +1222,6 @@ function buildPlant(piece, isGhost){
   const potBotR= 0.20;
   const baseY  = -piece.h/2;
 
-  // Pot body — tapered cylinder
   const pot = new THREE.Mesh(
     new THREE.CylinderGeometry(potTopR, potBotR, potH, 14),
     new THREE.MeshLambertMaterial({color:C.potClay})
@@ -924,7 +1230,6 @@ function buildPlant(piece, isGhost){
   pot.castShadow = true; pot.receiveShadow = true;
   g.add(pot);
 
-  // Pot rim — thin wider cylinder on top (no torus)
   const rim = new THREE.Mesh(
     new THREE.CylinderGeometry(potTopR+0.04, potTopR, 0.06, 14),
     new THREE.MeshLambertMaterial({color:C.potDark})
@@ -932,7 +1237,6 @@ function buildPlant(piece, isGhost){
   rim.position.y = baseY + potH;
   g.add(rim);
 
-  // Soil — flat disc (CircleGeometry is fine, it's not a ring)
   const soil = new THREE.Mesh(
     new THREE.CircleGeometry(potTopR, 14),
     new THREE.MeshLambertMaterial({color:0x2a1808})
@@ -941,8 +1245,6 @@ function buildPlant(piece, isGhost){
   soil.position.y = baseY + potH + 0.01;
   g.add(soil);
 
-  // Grass blades — each blade is a flat quad (PlaneGeometry) rotated to fan outward
-  // Fixed seed so they look the same every time (no Math.random flickering)
   const bladeData = [
     [0,     0.72, 0.10, 0.04],
     [0.52,  0.60, 0.12, 0.05],
@@ -956,24 +1258,21 @@ function buildPlant(piece, isGhost){
     [4.71,  0.68, 0.10, 0.05],
     [5.24,  0.58, 0.11, 0.04],
     [5.76,  0.74, 0.09, 0.03],
-  ]; // [angle, height, spread, width]
+  ];
 
   const bladeMatD = new THREE.MeshLambertMaterial({color:C.grassGreen, side:THREE.DoubleSide});
   const bladeMatL = new THREE.MeshLambertMaterial({color:C.grassLight, side:THREE.DoubleSide});
   const grassBase = baseY + potH + 0.02;
 
   bladeData.forEach(([angle, bh, spread, bw], i)=>{
-    // Blade: a PlaneGeometry, narrow at top wide at base, then rotated
     const bladeGeo = new THREE.PlaneGeometry(bw, bh);
     const blade = new THREE.Mesh(bladeGeo, i%3===0 ? bladeMatL : bladeMatD);
-    // Pivot from bottom of blade
     blade.geometry.translate(0, bh/2, 0);
     const bx = Math.cos(angle)*spread;
     const bz = Math.sin(angle)*spread;
     blade.position.set(bx, grassBase, bz);
-    // Tilt outward from centre
     blade.rotation.y = -angle;
-    blade.rotation.z = -(0.2 + spread*1.5); // lean outward
+    blade.rotation.z = -(0.2 + spread*1.5);
     g.add(blade);
   });
 
@@ -981,12 +1280,12 @@ function buildPlant(piece, isGhost){
 }
 
 // ═══════════════════════════════════════════════════════════
-// REBUILD (updates hole adjacency on all floor boxes)
+// REBUILD
 // ═══════════════════════════════════════════════════════════
 function rebuild(){
   for(const it of placed){
     if(it.type!=='floor') continue;
-    if(TUNNEL_IDS.has(it.piece.id)||PLANT_IDS.has(it.piece.id)) continue; // no adjacency needed
+    if(TUNNEL_IDS.has(it.piece.id)||SPECIAL_IDS.has(it.piece.id)||BED_IDS.has(it.piece.id)) continue;
     scene.remove(it.group);
     const g=buildFloorBox(it.piece,getAdj(it),false);
     g.position.set(it.gx+it.piece.w/2, it.gy+it.piece.h/2, it.gz+it.piece.d/2);
@@ -1007,9 +1306,13 @@ function showFloorGhost(gx,gz){
   if(gx<0||gz<0||gx+p.w>ROOM||gz+p.d>ROOM) return;
   const gy=stackH(gx,gz,p.w,p.d);
   if(TUNNEL_IDS.has(p.id))      ghost=buildTunnel(p,true);
-  else if(PLANT_IDS.has(p.id))  ghost=buildPlant(p,true);
+  else if(p.id==='f_fountain')   ghost=buildFountain(p,true);
+  else if(p.id==='f_bowl')        ghost=buildFoodBowl(p,true);
+  else if(BED_IDS.has(p.id))       ghost=buildCatBed(p,true);
+  else if(SPECIAL_IDS.has(p.id))  ghost=buildPlant(p,true);
   else                           ghost=buildFloorBox(p,{px:false,nx:false,pz:false,nz:false},true);
-  ghost.position.set(gx+p.w/2, gy+p.h/2, gz+p.d/2);
+  const ghostY = (p.id==='f_fountain'||p.id==='f_bowl'||BED_IDS.has(p.id)) ? gy : gy+p.h/2;
+  ghost.position.set(gx+p.w/2, ghostY, gz+p.d/2);
   ghostTarget={x:ghost.position.x,y:ghost.position.y,z:ghost.position.z};
   scene.add(ghost);
 }
@@ -1038,9 +1341,13 @@ function placeFloor(gx,gz){
   const gy=stackH(gx,gz,p.w,p.d);
   let g;
   if(TUNNEL_IDS.has(p.id))      g=buildTunnel(p,false);
-  else if(PLANT_IDS.has(p.id))  g=buildPlant(p,false);
+  else if(p.id==='f_fountain')   g=buildFountain(p,false);
+  else if(p.id==='f_bowl')        g=buildFoodBowl(p,false);
+  else if(BED_IDS.has(p.id))       g=buildCatBed(p,false);
+  else if(SPECIAL_IDS.has(p.id))  g=buildPlant(p,false);
   else                           g=buildFloorBox(p,{px:false,nx:false,pz:false,nz:false},false);
-  g.position.set(gx+p.w/2,gy+p.h/2,gz+p.d/2);
+  const yOff = (p.id==='f_fountain'||p.id==='f_bowl'||BED_IDS.has(p.id)) ? gy : gy+p.h/2;
+  g.position.set(gx+p.w/2, yOff, gz+p.d/2);
   scene.add(g);
   placed.push({piece:p,gx,gz,gy,type:'floor',group:g});
   rebuild();
@@ -1054,41 +1361,25 @@ function placeWall(gx,gy,wall){
   if(gx<0||gy<0||gx+p.w>ROOM||gy+p.h>WALL_H) return;
   const g=buildWallPiece(p,false);
 
-  // Compute where Winston should visit depending on piece type
-  // All wall pieces: group origin is at piece centre
-  // Back wall: group.position = (gx+w/2, gy+h/2, d/2)
-  // Left wall: group.position = (d/2, gy+h/2, gx+w/2), rotated Y 90deg
-
   function visitCoords(wall){
-    // All wall pieces: group.position = (gx+w/2, gy+h/2, d/2) for back wall
-    //                                  (d/2, gy+h/2, gx+w/2) for left wall
-    // Top surface world Y = gy + h (group centre + h/2)
-    // Piece front face world Z = d (group centre + d/2) for back wall
+    const topY    = gy + p.h;
+    const centreZ = p.d / 2;
+    const centreX = p.d / 2;
 
-    const topY    = gy + p.h;           // world Y of top surface
-    const centreZ = p.d / 2;            // world Z of piece centre (back wall)
-    const centreX = p.d / 2;            // world X of piece centre (left wall)
-
-    // Cat sits ON TOP of piece — centred on it
     let vx = (wall==='left') ? centreX : gx + p.w/2;
     let vz = (wall==='left') ? gx + p.w/2 : centreZ;
     let vy, sc;
 
     if(p.id==='w_hammock'){
-      // Hammock bowl sags ~0.28 below piece centre (gy+h/2)
-      // Bowl bottom world Y = gy + h/2 - 0.28
       vy = (gy + p.h/2 - 0.28) + CAT_FOOT;
       sc = 0.75;
     } else if(p.id==='w_post'){
-      // Sit at the base of the scratcher on the floor
       vy = gy + CAT_FOOT;
       sc = 0.8;
     } else if(p.id==='w_ladder'){
-      // Bridge middle slat — at lowest sag point = gy + h/2 - sag/2
       vy = (gy + p.h/2 - 0.11) + CAT_FOOT;
       sc = 0.8;
     } else {
-      // Shelf, wide shelf, cat box — stand on top surface
       vy = topY + CAT_FOOT;
       sc = 0.85;
     }
@@ -1148,37 +1439,19 @@ function updateCount(){
 }
 
 // ═══════════════════════════════════════════════════════════
-// WINSTON — rigged 3D cat with walk cycle animation
-//
-// Hierarchy:
-//   root (moves through world)
-//   └─ bodyPivot  (bobs up/down, squash+stretch)
-//      ├─ body mesh
-//      ├─ belly mesh
-//      ├─ neckPivot (subtle head bob)
-//      │  └─ head, ears, eyes, nose, snout, whiskers
-//      ├─ tailBase → tailMid → tailTip  (tail sway chain)
-//      ├─ frontLeftPivot  → upper → lower → paw
-//      ├─ frontRightPivot → upper → lower → paw
-//      ├─ backLeftPivot   → upper → lower → paw
-//      └─ backRightPivot  → upper → lower → paw
+// CAT BUILDER — Winston + Griffey
 // ═══════════════════════════════════════════════════════════
-
-let wRig = null; // winston's rig — kept for animateWinston compatibility
+let wRig = null;
 
 function buildWinstonMesh(){
-  // ── TABBY TEXTURES ──
-  // Paint canvas textures so Winston has brown+black stripes and white belly
   function stripeTexture(baseCol, stripeCol, stripeCount, w=64, h=64){
     const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
     const c=cv.getContext('2d');
     c.fillStyle=baseCol; c.fillRect(0,0,w,h);
-    // Bold irregular tabby stripes — vary width and position slightly
     c.fillStyle=stripeCol;
     for(let i=0;i<stripeCount;i++){
       const y  = ((i+0.1)/(stripeCount)) * h;
-      const sw = h/(stripeCount*1.6);  // bolder stripes
-      // Slightly wavy edge for each stripe
+      const sw = h/(stripeCount*1.6);
       for(let x=0;x<w;x++){
         const wave = Math.sin(x/w*Math.PI*2)*2;
         c.fillRect(x, y+wave, 1, sw);
@@ -1192,17 +1465,14 @@ function buildWinstonMesh(){
     return new THREE.CanvasTexture(cv);
   }
 
-  // Base fur: warm brown with dark brown/black stripes
-  // Winston's actual colours: dark grey-brown base, near-black bold stripes,
-  // white chest & muzzle, warm ginger-brown flank patch, pink nose, green eyes
-  const furTex   = stripeTexture('#4a4038','#18120c', 5);        // dark grey-brown + black stripes
-  const headTex  = stripeTexture('#4a4038','#18120c', 4, 64, 32); // same on head
-  const legTex   = stripeTexture('#3a3028','#18120c', 3, 32, 64); // legs slightly darker
-  const tailTex  = stripeTexture('#3a3028','#100c08', 5, 32, 64); // tail, more rings
-  const paleTex  = solidTexture('#f2f0ea'); // bright white chest & muzzle
-  const pinkTex  = solidTexture('#e8788a'); // pink nose
+  const furTex   = stripeTexture('#4a4038','#18120c', 5);
+  const headTex  = stripeTexture('#4a4038','#18120c', 4, 64, 32);
+  const legTex   = stripeTexture('#3a3028','#18120c', 3, 32, 64);
+  const tailTex  = stripeTexture('#3a3028','#100c08', 5, 32, 64);
+  const paleTex  = solidTexture('#f2f0ea');
+  const pinkTex  = solidTexture('#e8788a');
   const blkTex   = solidTexture('#0c0808');
-  const grnTex   = solidTexture('#4a7838'); // warm green eyes like the photo
+  const grnTex   = solidTexture('#4a7838');
   const whtTex   = solidTexture('#ffffff');
 
   function mat(tex, extra={}){
@@ -1210,9 +1480,9 @@ function buildWinstonMesh(){
   }
 
   const fur   = mat(furTex);
-  const furH  = mat(headTex);   // head (fewer stripes, different scale)
-  const furL  = mat(legTex);    // legs
-  const furT  = mat(tailTex);   // tail
+  const furH  = mat(headTex);
+  const furL  = mat(legTex);
+  const furT  = mat(tailTex);
   const pale  = mat(paleTex);
   const pink  = mat(pinkTex);
   const blk   = mat(blkTex);
@@ -1222,12 +1492,10 @@ function buildWinstonMesh(){
   function mesh(geo,mat,cast=false){ const m=new THREE.Mesh(geo,mat); m.castShadow=cast; return m; }
   function pivot(){ return new THREE.Group(); }
 
-  // ── ROOT ──
   const root = new THREE.Group();
 
-  // ── BODY PIVOT — bobs during walk ──
   const bodyPivot = pivot();
-  bodyPivot.position.y = 0.22; // body centre height from ground
+  bodyPivot.position.y = 0.22;
   root.add(bodyPivot);
 
   const body = mesh(new THREE.SphereGeometry(0.22,12,8), fur, true);
@@ -1239,16 +1507,14 @@ function buildWinstonMesh(){
   belly.position.set(0, -0.02, 0.16);
   bodyPivot.add(belly);
 
-  // ── NECK + HEAD PIVOT ──
   const neckPivot = pivot();
-  neckPivot.position.set(0, 0.16, 0.14); // front-top of body
+  neckPivot.position.set(0, 0.16, 0.14);
   bodyPivot.add(neckPivot);
 
   const head = mesh(new THREE.SphereGeometry(0.18,12,10), furH, true);
   head.position.set(0, 0.10, 0.04);
   neckPivot.add(head);
 
-  // ears on head
   for(const s of [-1,1]){
     const e = mesh(new THREE.ConeGeometry(0.065,0.14,6), furH);
     e.position.set(s*0.10, 0.26, 0.02);
@@ -1260,18 +1526,15 @@ function buildWinstonMesh(){
     neckPivot.add(ei);
   }
 
-  // snout
   const snout = mesh(new THREE.SphereGeometry(0.08,8,6), pale);
   snout.scale.set(1.1, 0.72, 0.85);
   snout.position.set(0, 0.06, 0.20);
   neckPivot.add(snout);
 
-  // nose
   const nose = mesh(new THREE.SphereGeometry(0.025,6,5), pink);
   nose.position.set(0, 0.09, 0.275);
   neckPivot.add(nose);
 
-  // eyes
   for(const s of [-1,1]){
     const ew = mesh(new THREE.SphereGeometry(0.045,8,6), wht);
     ew.position.set(s*0.085, 0.14, 0.165);
@@ -1287,14 +1550,12 @@ function buildWinstonMesh(){
     neckPivot.add(sh);
   }
 
-  // whiskers
   const wMat = new THREE.LineBasicMaterial({color:0xfff8f0,transparent:true,opacity:0.9});
   [[-1,0.4],[-1,0],[-1,-0.3],[1,0.4],[1,0],[1,-0.3]].forEach(([s,vy])=>{
     const pts=[new THREE.Vector3(s*0.08,0.065+vy*0.018,0.24),new THREE.Vector3(s*0.22,0.065+vy*0.03,0.22)];
     neckPivot.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),wMat));
   });
 
-  // ── TAIL — 3-segment chain for natural sway ──
   const tailBase = pivot();
   tailBase.position.set(0, 0.05, -0.22);
   bodyPivot.add(tailBase);
@@ -1314,10 +1575,8 @@ function buildWinstonMesh(){
   const tt = mesh(new THREE.SphereGeometry(0.045,6,4), pale);
   tailTip.add(tt);
 
-  // ── LEGS — pivot at hip/shoulder, upper+lower segments ──
-  // Each leg: hipPivot → upperLeg → kneePivot → lowerLeg → paw
   function buildLeg(isFront, side){
-    const hp = pivot(); // hip/shoulder pivot
+    const hp = pivot();
     const zOff = isFront ?  0.14 : -0.14;
     hp.position.set(side*0.16, -0.10, zOff);
     bodyPivot.add(hp);
@@ -1326,7 +1585,7 @@ function buildWinstonMesh(){
     upper.position.y = -0.09;
     hp.add(upper);
 
-    const kp = pivot(); // knee pivot
+    const kp = pivot();
     kp.position.y = -0.18;
     hp.add(kp);
 
@@ -1347,36 +1606,236 @@ function buildWinstonMesh(){
   const legBL = buildLeg(false, -1);
   const legBR = buildLeg(false,  1);
 
-  // Expose rig — stored on root so tickCat can find it
+  // ══════════════════════════════════════════════════════
+  // SUPERHERO CAPE — dramatic flowing cape like the image
+  // Attached at shoulders/neck, wide flowing hem behind cat
+  // Uses a subdivided mesh so it can billow naturally
+  // ══════════════════════════════════════════════════════
+  function addSuperheroCape(capeColor){
+    const capeM = new THREE.MeshLambertMaterial({
+      color: capeColor,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.96,
+    });
+    // Highlight sheen layer — slightly lighter, adds depth
+    const shineM = new THREE.MeshLambertMaterial({
+      color: capeColor,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.35,
+      emissive: new THREE.Color(capeColor).multiplyScalar(0.3),
+    });
+
+    // Cape geometry:
+    // We build a fan of quads from the shoulder yoke down to a wide flaring hem.
+    // The cape hangs from the SHOULDERS and flows BEHIND the cat body.
+    // 
+    // Coordinate system: bodyPivot local space
+    //   +Z = forward (front of cat)
+    //   -Z = back (behind cat)
+    //   +Y = up
+    //   Body centre at (0,0,0) in bodyPivot space
+    //
+    // Cape anchor: just behind the neck/shoulder region
+    // The cape fans out and down, curving away from the body
+
+    const cols = 8;   // horizontal segments (wider = more flare)
+    const rows = 6;   // vertical segments (more = smoother curve)
+
+    // Define the cape shape as a grid of (cols+1) × (rows+1) points
+    // Top edge: narrow, sits at shoulder level
+    // Bottom edge: wide, flared out and down behind the cat
+    // Side edges: curve outward as they go down
+
+    const verts = [];
+    const uvs   = [];
+    const tris  = [];
+
+    // Cape drapes over the cat's back then hangs down behind.
+    // Body sphere: centre at (0,0,0) in bodyPivot space, radius ~0.20
+    // Neck/tie point: top-front of body ~ y=+0.18, z=+0.10
+    // The cape must:
+    //   row 0  — tie at neck (top-front)
+    //   row 1-3 — slide OVER the back (following the body surface arc)
+    //   row 4-6 — fall DOWN behind the cat and spread wide
+    //
+    // We define control points and lerp between them per row.
+    // Each control point: [y, z, halfWidth]
+    const ctrls = [
+      [ 0.18,  0.10,  0.14],  // 0: neck tie — top of body, slightly forward
+      [ 0.20, -0.05,  0.18],  // 1: crest of back
+      [ 0.16, -0.18,  0.24],  // 2: over the back / rump
+      [ 0.05, -0.30,  0.34],  // 3: just past the body, starting to hang
+      [-0.10, -0.48,  0.44],  // 4: hanging behind
+      [-0.22, -0.62,  0.52],  // 5: lower
+      [-0.32, -0.72,  0.58],  // 6: hem — wide and low
+    ];
+
+    for(let row = 0; row <= rows; row++){
+      // Map row index into the control point array
+      const t  = row / rows * (ctrls.length - 1);
+      const i0 = Math.min(Math.floor(t), ctrls.length - 2);
+      const f  = t - i0;
+      const [y0, z0, w0] = ctrls[i0];
+      const [y1, z1, w1] = ctrls[i0 + 1];
+      const py    = y0 + (y1 - y0) * f;
+      const pz    = z0 + (z1 - z0) * f;
+      const halfW = w0 + (w1 - w0) * f;
+
+      for(let col = 0; col <= cols; col++){
+        const ut = col / cols;
+        const px = (ut - 0.5) * 2 * halfW;
+        // Slight lateral billow in lower half
+        const billow = Math.sin(ut * Math.PI) * Math.sin((row / rows) * Math.PI) * 0.04;
+        verts.push(px, py, pz + billow);
+        uvs.push(ut, 1 - row / rows);
+      }
+    }
+
+    // Build triangles
+    for(let row = 0; row < rows; row++){
+      for(let col = 0; col < cols; col++){
+        const a = row * (cols+1) + col;
+        const b = a + 1;
+        const c = a + (cols+1);
+        const d = c + 1;
+        tris.push(a, c, b);
+        tris.push(b, c, d);
+      }
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
+    geo.setIndex(tris);
+    geo.computeVertexNormals();
+
+    const cape = new THREE.Mesh(geo, capeM);
+    cape.castShadow = true;
+    bodyPivot.add(cape);
+
+    // ── CAPE COLLAR — decorative clasp at neck ──
+    // A small curved band across the shoulder connecting both sides of the cape
+    const collarGeo = new THREE.CylinderGeometry(0.005, 0.005, 0.16 * 2.2, 4);
+    collarGeo.rotateZ(Math.PI / 2);
+    const collarM = new THREE.MeshLambertMaterial({color: 0xffd700}); // gold clasp
+    const collar = new THREE.Mesh(collarGeo, collarM);
+    collar.position.set(0, 0.19, 0.10);
+    bodyPivot.add(collar);
+
+    // Round gold clasp in centre
+    const claspGeo = new THREE.SphereGeometry(0.030, 8, 6);
+    const clasp = new THREE.Mesh(claspGeo, collarM);
+    clasp.position.set(0, 0.20, 0.14);
+    bodyPivot.add(clasp);
+
+
+
+    return cape;
+  }
+
+  root._cape = addSuperheroCape(0xdd2211); // vivid red for Winston
+  root._addCape = addSuperheroCape;
+
   const rig = { bodyPivot, neckPivot, tailBase, tailMid, tailTip,
                 legFL, legFR, legBL, legBR };
-  wRig = rig;      // keep global in sync for Winston
-  root._rig = rig; // also store on mesh for Griffey
+  wRig = rig;
+  root._rig = rig;
 
   return root;
 }
 
-// Animate the rig each frame based on walk state and phase
-function animateWinston(isWalking, phase){
+function buildGriffeyMesh(){
+  const g = buildWinstonMesh();
+
+  // Recolour all textured fur meshes to solid grey
+  g.traverse(child => {
+    if(!child.isMesh) return;
+    const mats = Array.isArray(child.material) ? child.material : [child.material];
+    mats.forEach(m => {
+      if(!m.map) return;
+      const orig = m.map.image;
+      if(!orig) return;
+      const tmp = document.createElement('canvas');
+      tmp.width=orig.width||64; tmp.height=orig.height||64;
+      const tc = tmp.getContext('2d');
+      tc.drawImage(orig,0,0);
+      const px = tc.getImageData(0,0,1,1).data;
+      const isLight = px[0]>200;
+      const cv = document.createElement('canvas'); cv.width=64; cv.height=64;
+      const c = cv.getContext('2d');
+      c.fillStyle = isLight ? '#f0eee8' : '#7a7a72';
+      c.fillRect(0,0,64,64);
+      m.map = new THREE.CanvasTexture(cv);
+      m.map.wrapS = m.map.wrapT = THREE.RepeatWrapping;
+      m.needsUpdate = true;
+    });
+  });
+
+  // Blue cape for Griffey
+  if(g._cape){
+    g._cape.material.color.setHex(0x1133ee);
+  }
+  // Silver collar
+  g.traverse(child=>{
+    if(child.isMesh && child.material && child.material.color
+      && child.material.color.getHex()===0xffd700){
+      child.material = new THREE.MeshLambertMaterial({color:0xc8c8c8});
+    }
+  });
+
+  return g;
+}
+
+function animateWinston(isWalking, phase, isSitting){
   if(!wRig) return;
   const {bodyPivot, neckPivot, tailBase, tailMid, tailTip,
          legFL, legFR, legBL, legBR} = wRig;
 
+  if(isSitting){
+    // ── SITTING POSE ──
+    // Body drops down, back legs fold under, front legs straight, head tilts up
+    const breath = Math.sin(phase * 0.5) * 0.012;
+
+    // Body sinks lower and tilts back slightly when sitting
+    bodyPivot.position.y = 0.12 + breath;
+    bodyPivot.rotation.x = -0.22; // lean back a little
+    bodyPivot.scale.set(1, 1 + breath, 1);
+
+    // Head perks up — looking around contentedly
+    neckPivot.rotation.x = 0.20 + Math.sin(phase * 0.4) * 0.06;
+
+    // Front legs — straight down, slightly forward
+    legFL.hp.rotation.x += (0.55 - legFL.hp.rotation.x) * 0.10;
+    legFL.kp.rotation.x += (0.0  - legFL.kp.rotation.x) * 0.10;
+    legFR.hp.rotation.x += (0.55 - legFR.hp.rotation.x) * 0.10;
+    legFR.kp.rotation.x += (0.0  - legFR.kp.rotation.x) * 0.10;
+
+    // Back legs — fold up and outward (haunches up, lower leg tucked under)
+    legBL.hp.rotation.x += (-1.1 - legBL.hp.rotation.x) * 0.10;
+    legBL.kp.rotation.x += ( 1.4 - legBL.kp.rotation.x) * 0.10;
+    legBR.hp.rotation.x += (-1.1 - legBR.hp.rotation.x) * 0.10;
+    legBR.kp.rotation.x += ( 1.4 - legBR.kp.rotation.x) * 0.10;
+
+    // Tail wraps around — curls to one side
+    tailBase.rotation.x = 0.8 + Math.sin(phase * 0.3) * 0.05;
+    tailBase.rotation.z = Math.sin(phase * 0.6) * 0.15;
+    tailMid.rotation.z  = 0.5 + Math.sin(phase * 0.5) * 0.10;
+    tailTip.rotation.z  = 0.4 + Math.sin(phase * 0.4) * 0.08;
+    return;
+  }
+
   if(isWalking){
-    // Body bob — up/down at twice leg frequency
+    bodyPivot.rotation.x += (0 - bodyPivot.rotation.x) * 0.08;
     bodyPivot.position.y = 0.22 + Math.abs(Math.sin(phase*2)) * 0.03;
-    // Slight body roll side to side
     bodyPivot.rotation.z = Math.sin(phase*2) * 0.06;
-    // Head bob — nods slightly forward on each step
     neckPivot.rotation.x = Math.sin(phase*2) * 0.08 - 0.1;
 
-    // Walk cycle — diagonal gait: FL+BR swing together, FR+BL together
-    // Hip pivots forward/back, knee bends on swing phase
-    const swing = 0.45; // max hip swing angle
-    const knee  = 0.50; // max knee bend
+    const swing = 0.45;
+    const knee  = 0.50;
 
-    // FL and BR are in phase, FR and BL are opposite
-    const phA =  Math.sin(phase); // positive = forward swing
+    const phA =  Math.sin(phase);
     const phB = -Math.sin(phase);
 
     legFL.hp.rotation.x =  phA * swing;
@@ -1391,25 +1850,22 @@ function animateWinston(isWalking, phase){
     legBL.hp.rotation.x =  phB * swing * 0.9;
     legBL.kp.rotation.x = (phB > 0 ? phB : 0) * knee * 0.8;
 
-    // Tail sways opposite to body roll, lags behind
     tailBase.rotation.z = Math.sin(phase*2 - 0.4) * 0.35;
     tailMid.rotation.z  = Math.sin(phase*2 - 0.7) * 0.30;
     tailTip.rotation.z  = Math.sin(phase*2 - 1.0) * 0.25;
-    tailBase.rotation.x = 0.3; // held up during walk
+    tailBase.rotation.x = 0.3;
 
   } else {
-    // Idle — slow breathing/tail sway only
+    bodyPivot.rotation.x += (0 - bodyPivot.rotation.x) * 0.08;
     const breath = Math.sin(phase * 0.6) * 0.018;
     bodyPivot.position.y = 0.22 + breath;
     bodyPivot.scale.set(1, 1 + breath*1.5, 1);
     neckPivot.rotation.x = -0.05 + Math.sin(phase*0.5)*0.04;
 
-    // Legs return to rest
     for(const {hp,kp} of [legFL,legFR,legBL,legBR]){
       hp.rotation.x += (0 - hp.rotation.x) * 0.12;
       kp.rotation.x += (0.12 - kp.rotation.x) * 0.12;
     }
-    // Tail sways lazily
     tailBase.rotation.x = 0.5 + Math.sin(phase*0.4)*0.1;
     tailBase.rotation.z = Math.sin(phase*0.7) * 0.25;
     tailMid.rotation.z  = Math.sin(phase*0.7 - 0.3) * 0.20;
@@ -1417,331 +1873,399 @@ function animateWinston(isWalking, phase){
   }
 }
 
-// Collect all visit points and sort them into a sensible traversal order:
-// floor pieces first (sorted by x/z), then wall pieces sorted by height (low→high)
-// so Winston walks the floor then "climbs" the wall furniture.
-function buildWinstonPath(){
-  const floorPts = [];
-  const wallPts  = [];
-
-  for(const it of placed){
-    if(it.type==='floor' && BOX_IDS.has(it.piece.id)){
-      // Box group is at world y = gy + h/2. Floor slab inside at -h/2+T/2 relative.
-      // So box floor world y = gy + T/2 = gy + 0.025
-      const boxFloorY = it.gy + 0.025;
-      floorPts.push({
-        x: it.gx + it.piece.w/2,
-        y: boxFloorY + CAT_FOOT,
-        z: it.gz + it.piece.d/2,
-        sc: 1.0, kind:'floor',
-      });
-    }
-    if(it.type==='floor' && TUNNEL_IDS.has(it.piece.id)){
-      // Tunnel sits on floor (y=gy), cat crouches through centre
-      floorPts.push({
-        x: it.gx + it.piece.w/2,
-        y: it.gy + CAT_FOOT,
-        z: it.gz + it.piece.d/2,
-        sc: 0.8, kind:'floor',
-      });
-    }
-    if(it.type==='floor' && PLANT_IDS.has(it.piece.id)){
-      // Plant group at gy+h/2. Cat stands beside it at floor level (y=gy)
-      floorPts.push({
-        x: it.gx + it.piece.w/2 + 0.5,
-        y: it.gy + CAT_FOOT,
-        z: it.gz + it.piece.d/2,
-        sc: 0.9, kind:'floor',
-      });
-    }
-    if(it.type==='wall'){
-      wallPts.push({
-        x: it.visitX,
-        y: it.visitY,
-        z: it.visitZ,
-        sc: it.visitSc || 0.85,
-        kind: it.piece.id==='w_hammock' ? 'hammock' : 'wall',
-        wallY: it.gy,
-      });
-    }
-  }
-
-  // Sort floor pieces nearest the wall first (low Z), then left-to-right
-  floorPts.sort((a,b) => a.z - b.z || a.x - b.x);
-
-  // Sort wall pieces bottom-to-top
-  wallPts.sort((a,b) => a.wallY - b.wallY || a.x - b.x);
-
-  if(wallPts.length === 0) return floorPts;
-  if(floorPts.length === 0) return wallPts;
-
-  // Route: walk floor → jump to lowest wall piece → climb up wall → 
-  //        descend back down → jump back to floor → repeat
-  const wallUp   = wallPts;
-  const wallDown = wallPts.length > 1 ? [...wallPts].reverse().slice(1) : [];
-  return [...floorPts, ...wallUp, ...wallDown];
-}
-
-// ── GRIFFEY — solid grey cat ──
-function buildGriffeyMesh(){
-  // Reuse same rig structure as Winston, just different colours
-  // Grey: medium grey body, white chest, pink nose, green eyes
-  const origFur  = '0xf0a860'; // placeholder — we patch materials after build
-
-  // Temporarily override the texture functions to produce grey colours
-  const savedBuild = buildWinstonMesh;
-
-  // Build a grey cat by constructing the mesh and swapping material colours
-  const g = buildWinstonMesh();
-
-  // Walk every mesh child and recolour fur → grey, pale → white
-  g.traverse(child => {
-    if(!child.isMesh) return;
-    const mats = Array.isArray(child.material) ? child.material : [child.material];
-    mats.forEach(m => {
-      if(!m.map) return; // skip non-texture mats
-      // Rebuild texture with grey palette
-      const cv = document.createElement('canvas'); cv.width=64; cv.height=64;
-      const c = cv.getContext('2d');
-      // Detect which texture type by sampling the original
-      const orig = m.map.image;
-      if(!orig) return;
-      const tmp = document.createElement('canvas');
-      tmp.width=orig.width||64; tmp.height=orig.height||64;
-      const tc = tmp.getContext('2d');
-      tc.drawImage(orig,0,0);
-      const px = tc.getImageData(0,0,1,1).data;
-      const isLight = px[0]>200; // pale/white texture
-      if(isLight){
-        // Keep white/pale — chest and muzzle
-        c.fillStyle='#f0eee8'; c.fillRect(0,0,64,64);
-      } else {
-        // Solid grey — no stripes
-        c.fillStyle='#7a7a72'; c.fillRect(0,0,64,64);
-      }
-      m.map = new THREE.CanvasTexture(cv);
-      m.map.wrapS = m.map.wrapT = THREE.RepeatWrapping;
-      m.needsUpdate = true;
-    });
-  });
-
-  return g;
-}
-
-// ── GENERIC CAT MANAGEMENT ──
 function toggleCat(name){
   const cat = cats[name];
   if(cat.active && cat.mesh){
-    // Remove
     scene.remove(cat.mesh);
     cat.mesh=null; cat.active=false; cat.rig=null;
-    updateCatButtons();
     if(name==='winston'){ winston=null; wRig=null; }
+    updateCatButtons();
     return;
   }
-  // Add
   cat.mesh = (name==='winston') ? buildWinstonMesh() : buildGriffeyMesh();
-  cat.rig = cat.mesh._rig || wRig; // grab rig set during build
+  cat.rig  = cat.mesh._rig || wRig;
   if(name==='winston'){ winston=cat.mesh; wRig=cat.rig; }
   cat.active=true;
   scene.add(cat.mesh);
 
   const pts = buildWinstonPath();
-
   if(pts.length===0){
-    cat.mesh.scale.setScalar(1.0);
-    // Place cats side by side in room centre
     const ox = name==='griffey' ? 0.5 : -0.5;
     cat.mesh.position.set(ROOM/2+ox, CAT_FOOT, ROOM/2);
+    cat.mesh.scale.setScalar(1.0);
     cat.state='idle';
     updateCatButtons();
     setHint('Place some furniture so the cats can explore!');
     return;
   }
-
   const loop = [...pts,...[...pts].reverse().slice(1,-1)];
   cat.path  = loop;
-  // Griffey starts halfway through so they're never at the same spot
   cat.idx   = (name==='griffey') ? Math.floor(loop.length/2) : 0;
   cat.pause = 0;
   cat.state = 'walking';
   cat.T     = 0;
-  cat.phase = (name==='griffey') ? Math.PI : 0; // offset walk phase too
-
+  cat.phase = (name==='griffey') ? Math.PI : 0;
   const startPt = loop[cat.idx];
   cat.mesh.scale.setScalar(startPt.sc||1);
   cat.mesh.position.set(startPt.x, startPt.y, startPt.z);
-
-  // Sync legacy vars for Winston
-  if(name==='winston'){
-    wRig=null;
-    cat.rig=null; // will be set by buildWinstonMesh via wRig
-  }
-
   updateCatButtons();
   const activeNames = Object.entries(cats).filter(([,c])=>c.active).map(([n])=>n);
   setHint(activeNames.map(n=>n[0].toUpperCase()+n.slice(1)).join(' & ')+' are exploring!');
 }
 
 function updateCatButtons(){
-  const emojis = {winston:'🐱', griffey:'🐈'};
+  const emojis = {winston:'🐈', griffey:'🐈‍⬛'};
   ['winston','griffey'].forEach(name=>{
     const active = cats[name].active;
-    const label = name[0].toUpperCase()+name.slice(1);
-    const emoji = emojis[name];
-    // Sidebar button (desktop only — may not exist)
-    const sBtn = document.getElementById('btn-'+name);
-    if(sBtn){ sBtn.textContent=(active?'Remove ':'Add ')+label; sBtn.style.opacity=active?'0.7':'1'; }
-    // Canvas floating button
-    const cbtn = document.getElementById('canvas-btn-'+name);
+    const label  = name[0].toUpperCase()+name.slice(1);
+    const cbtn   = document.getElementById('canvas-btn-'+name);
     if(cbtn){
-      cbtn.textContent = emoji+' '+(active?'Remove ':'Add ')+label;
+      const lbl = cbtn.querySelector('.cat-label');
+      if(lbl) lbl.textContent = (active?'Remove ':'Add ')+label;
       cbtn.classList.toggle('active', active);
     }
   });
 }
 
-// Legacy wrapper so any existing calls to addWinston() still work
-function addWinston(){ toggleCat('winston'); }
+function buildWinstonPath(){
+  const floorPts = [];
+  const wallPts  = [];
 
-// Jump arc state — used when Winston leaps between floor and wall
-// wJump now stored per-cat in cats.X.jump
-
-// How long (frames @60fps) a cat pauses at each spot
-// Hammock = very long lounge, boxes = medium sit, floor = brief sniff
-function pauseDuration(target){
-  if(target && target.kind==='hammock') return 300 + Math.floor(Math.random()*180); // 5-8s
-  if(target && target.kind==='wall')    return 150 + Math.floor(Math.random()*120); // 2.5-4.5s
-  return 90 + Math.floor(Math.random()*90);  // 1.5-3s on floor
-}
-
-function tickCat(cat){
-  if(!cat.mesh) return;
-  cat.T += .016;
-
-  const isWalking = (cat.state==='walking'||cat.state==='jumping');
-  // Slow walk cycle — cats amble, they don't trot
-  if(isWalking) cat.phase += 0.055;
-  else          cat.phase += 0.018;
-
-  if(cat === cats.winston){
-    wRig = cat.rig;
-    animateWinston(isWalking, cat.phase);
-  } else {
-    const savedRig = wRig;
-    wRig = cat.rig;
-    animateWinston(isWalking, cat.phase);
-    wRig = savedRig;
+  for(const it of placed){
+    if(it.type==='floor' && BOX_IDS.has(it.piece.id)){
+      const boxFloorY = it.gy + 0.025;
+      floorPts.push({x:it.gx+it.piece.w/2, y:boxFloorY+CAT_FOOT, z:it.gz+it.piece.d/2, sc:1.0, kind:'floor'});
+    }
+    if(it.type==='floor' && TUNNEL_IDS.has(it.piece.id)){
+      floorPts.push({x:it.gx+it.piece.w/2, y:it.gy+CAT_FOOT, z:it.gz+it.piece.d/2, sc:0.8, kind:'floor'});
+    }
+    if(it.type==='floor' && SPECIAL_IDS.has(it.piece.id)){
+      const isFountain = it.piece.id==='f_fountain';
+      const offset = it.piece.id==='f_plant' ? 0.6 : 0.5;
+      floorPts.push({
+        x: it.gx+it.piece.w/2 + (isFountain?0:offset),
+        y: CAT_FOOT,
+        z: it.gz+it.piece.d/2 + (isFountain?0.5:0),
+        sc:0.9, kind: isFountain ? 'fountain' : 'floor',
+      });
+    }
+    if(it.type==='floor' && BED_IDS.has(it.piece.id)){
+      floorPts.push({x:it.gx+it.piece.w/2, y:0.12, z:it.gz+it.piece.d/2, sc:0.95, kind:'bed'});
+    }
+    if(it.type==='wall'){
+      wallPts.push({
+        x:it.visitX, y:it.visitY, z:it.visitZ, sc:it.visitSc||0.85,
+        kind: it.piece.id==='w_hammock' ? 'hammock'
+            : (it.piece.id==='w_shelf'||it.piece.id==='w_wide') ? 'shelf' : 'wall',
+        wallY: it.gy,
+      });
+    }
   }
 
-  if(cat.state==='idle'){
-    cat.mesh.position.y = CAT_FOOT + Math.sin(cat.T*0.6)*.03;
+  const roamPts = [
+    {x:ROOM*0.25,y:CAT_FOOT,z:ROOM*0.35,sc:1.0,kind:'floor'},
+    {x:ROOM*0.60,y:CAT_FOOT,z:ROOM*0.25,sc:1.0,kind:'floor'},
+    {x:ROOM*0.40,y:CAT_FOOT,z:ROOM*0.55,sc:1.0,kind:'floor'},
+  ];
+  roamPts.forEach(p=>floorPts.push(p));
+
+  if(floorPts.length>2){
+    const sorted=[], remaining=[...floorPts];
+    sorted.push(remaining.splice(0,1)[0]);
+    while(remaining.length){
+      const last=sorted[sorted.length-1];
+      let bestI=0,bestD=Infinity;
+      remaining.forEach((p,i)=>{const d=(p.x-last.x)**2+(p.z-last.z)**2;if(d<bestD){bestD=d;bestI=i;}});
+      sorted.push(remaining.splice(bestI,1)[0]);
+    }
+    floorPts.length=0; sorted.forEach(p=>floorPts.push(p));
+  }
+
+  wallPts.sort((a,b)=>a.wallY-b.wallY||a.x-b.x);
+  if(wallPts.length===0) return floorPts;
+  if(floorPts.length===0) return wallPts;
+  const wallDown=wallPts.length>1?[...wallPts].reverse().slice(1):[];
+  return [...floorPts,...wallPts,...wallDown];
+}
+
+function pauseDuration(target){
+  if(target&&target.kind==='hammock')  return 300+Math.floor(Math.random()*180);
+  if(target&&target.kind==='bed')      return 240+Math.floor(Math.random()*360);
+  if(target&&target.kind==='fountain') return 120+Math.floor(Math.random()*80);
+  if(target&&target.kind==='shelf')    return 180+Math.floor(Math.random()*120);
+  if(target&&target.kind==='wall')     return 150+Math.floor(Math.random()*120);
+  return 90+Math.floor(Math.random()*90);
+}
+
+// ═══ KNOCK OBJECTS OFF SHELVES ═══
+const knockObjects=[];
+function spawnKnockObject(x,y,z){
+  const cols=[0xe85858,0x58a0e8,0xe8c058,0x58e878,0xe858c0];
+  const col=cols[Math.floor(Math.random()*cols.length)];
+  const geo=Math.random()>0.5?new THREE.BoxGeometry(0.12,0.12,0.12):new THREE.CylinderGeometry(0.05,0.05,0.14,8);
+  const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:col}));
+  m.position.set(x,y,z); m.castShadow=true; scene.add(m);
+  knockObjects.push({mesh:m,vx:(Math.random()-0.5)*0.06,vy:0.04,vz:(Math.random()-0.5)*0.06+0.04,landed:false,life:0});
+}
+function tickKnockObjects(){
+  for(let i=knockObjects.length-1;i>=0;i--){
+    const o=knockObjects[i]; o.life++;
+    if(!o.landed){
+      o.vy-=0.006; o.mesh.position.x+=o.vx; o.mesh.position.y+=o.vy; o.mesh.position.z+=o.vz;
+      o.mesh.rotation.x+=0.08; o.mesh.rotation.z+=0.06;
+      if(o.mesh.position.y<=CAT_FOOT){
+        o.mesh.position.y=CAT_FOOT; o.vy*=-0.3; o.vx*=0.7; o.vz*=0.7;
+        if(Math.abs(o.vy)<0.008) o.landed=true;
+      }
+    }
+    if(o.life>480){scene.remove(o.mesh);knockObjects.splice(i,1);}
+  }
+}
+
+// ═══ SPECIAL ANIMATIONS ═══
+function animateWinstonYawn(t){
+  if(!wRig)return;
+  const {bodyPivot,neckPivot,tailBase,tailMid,tailTip,legFL,legFR,legBL,legBR}=wRig;
+  const arc=Math.sin(Math.min(t,1)*Math.PI);
+  bodyPivot.position.y=0.22+arc*0.02; bodyPivot.scale.set(1,1,1); bodyPivot.rotation.x=0;
+  neckPivot.rotation.x=-0.5*arc; neckPivot.scale.setScalar(1+arc*0.12);
+  for(const {hp,kp} of [legFL,legFR]){ hp.rotation.x+=(0-hp.rotation.x)*0.1; kp.rotation.x+=(0.1-kp.rotation.x)*0.1; }
+  for(const {hp,kp} of [legBL,legBR]){ hp.rotation.x+=(0-hp.rotation.x)*0.1; kp.rotation.x+=(0.1-kp.rotation.x)*0.1; }
+  tailBase.rotation.x=0.3+arc*0.5; tailBase.rotation.z=0; tailMid.rotation.z=arc*0.2; tailTip.rotation.z=arc*0.15;
+}
+
+function animateWinstonStretch(t){
+  if(!wRig)return;
+  const {bodyPivot,neckPivot,tailBase,tailMid,tailTip,legFL,legFR,legBL,legBR}=wRig;
+  const arc=Math.sin(Math.min(t,1)*Math.PI);
+  bodyPivot.rotation.x=arc*0.5; bodyPivot.position.y=0.18+arc*0.06; bodyPivot.scale.set(1,1,1);
+  neckPivot.rotation.x=-0.3-arc*0.3; neckPivot.scale.setScalar(1);
+  legFL.hp.rotation.x=arc*-0.8; legFR.hp.rotation.x=arc*-0.8;
+  legFL.kp.rotation.x=arc*0.5;  legFR.kp.rotation.x=arc*0.5;
+  legBL.hp.rotation.x=arc*0.6;  legBR.hp.rotation.x=arc*0.6;
+  legBL.kp.rotation.x=arc*-0.3; legBR.kp.rotation.x=arc*-0.3;
+  tailBase.rotation.x=-0.3-arc*0.8; tailBase.rotation.z=0; tailMid.rotation.z=0; tailTip.rotation.z=0;
+}
+
+function animateWinstonDrink(t){
+  if(!wRig)return;
+  const {bodyPivot,neckPivot,tailBase,tailMid,tailTip,legFL,legFR,legBL,legBR}=wRig;
+  const bob=Math.max(0,Math.sin(t*3))*0.5;
+  bodyPivot.position.y=0.20-bob*0.06; bodyPivot.rotation.x=bob*0.3; bodyPivot.scale.set(1,1,1);
+  neckPivot.rotation.x=-0.5-bob*0.5; neckPivot.scale.setScalar(1);
+  for(const {hp,kp} of [legFL,legFR,legBL,legBR]){ hp.rotation.x+=(0-hp.rotation.x)*0.1; kp.rotation.x+=(0.1-kp.rotation.x)*0.1; }
+  tailBase.rotation.x=0.6; tailBase.rotation.z=Math.sin(t*0.5)*0.15;
+  tailMid.rotation.z=Math.sin(t*0.5-0.3)*0.12; tailTip.rotation.z=Math.sin(t*0.5-0.6)*0.10;
+}
+
+function animateWinston(isWalking,phase,isSitting,specialAnim,specialPhase){
+  if(!wRig)return;
+  const {bodyPivot,neckPivot,tailBase,tailMid,tailTip,legFL,legFR,legBL,legBR}=wRig;
+
+  if(specialAnim==='yawn')    {animateWinstonYawn(specialPhase);    return;}
+  if(specialAnim==='stretch') {animateWinstonStretch(specialPhase); return;}
+  if(specialAnim==='drink')   {animateWinstonDrink(specialPhase);   return;}
+
+  if(isSitting){
+    const breath=Math.sin(phase*0.5)*0.012;
+    bodyPivot.position.y=0.12+breath; bodyPivot.rotation.x=-0.22; bodyPivot.scale.set(1,1+breath,1);
+    neckPivot.rotation.x=0.20+Math.sin(phase*0.4)*0.06; neckPivot.scale.setScalar(1);
+    legFL.hp.rotation.x+=(0.55-legFL.hp.rotation.x)*0.10; legFL.kp.rotation.x+=(0-legFL.kp.rotation.x)*0.10;
+    legFR.hp.rotation.x+=(0.55-legFR.hp.rotation.x)*0.10; legFR.kp.rotation.x+=(0-legFR.kp.rotation.x)*0.10;
+    legBL.hp.rotation.x+=(-1.1-legBL.hp.rotation.x)*0.10; legBL.kp.rotation.x+=(1.4-legBL.kp.rotation.x)*0.10;
+    legBR.hp.rotation.x+=(-1.1-legBR.hp.rotation.x)*0.10; legBR.kp.rotation.x+=(1.4-legBR.kp.rotation.x)*0.10;
+    tailBase.rotation.x=0.8+Math.sin(phase*0.3)*0.05; tailBase.rotation.z=Math.sin(phase*0.6)*0.15;
+    tailMid.rotation.z=0.5+Math.sin(phase*0.5)*0.10;  tailTip.rotation.z=0.4+Math.sin(phase*0.4)*0.08;
     return;
   }
 
+  const isZoom=specialAnim==='zoomies';
+  if(isWalking){
+    neckPivot.scale.setScalar(1);
+    bodyPivot.rotation.x+=(0-bodyPivot.rotation.x)*0.08;
+    const swing=isZoom?0.70:0.45, knee=isZoom?0.75:0.50, bob=isZoom?0.06:0.03;
+    bodyPivot.position.y=0.22+Math.abs(Math.sin(phase*2))*bob;
+    bodyPivot.rotation.z=Math.sin(phase*2)*(isZoom?0.12:0.06);
+    neckPivot.rotation.x=Math.sin(phase*2)*0.08-0.1;
+    const phA=Math.sin(phase), phB=-Math.sin(phase);
+    legFL.hp.rotation.x=phA*swing; legFL.kp.rotation.x=(phA>0?phA:0)*knee;
+    legBR.hp.rotation.x=phA*swing*0.9; legBR.kp.rotation.x=(phA>0?phA:0)*knee*0.8;
+    legFR.hp.rotation.x=phB*swing; legFR.kp.rotation.x=(phB>0?phB:0)*knee;
+    legBL.hp.rotation.x=phB*swing*0.9; legBL.kp.rotation.x=(phB>0?phB:0)*knee*0.8;
+    tailBase.rotation.z=Math.sin(phase*2-0.4)*(isZoom?0.6:0.35);
+    tailMid.rotation.z=Math.sin(phase*2-0.7)*(isZoom?0.5:0.30);
+    tailTip.rotation.z=Math.sin(phase*2-1.0)*(isZoom?0.4:0.25);
+    tailBase.rotation.x=isZoom?0.0:0.3;
+  } else {
+    neckPivot.scale.setScalar(1);
+    bodyPivot.rotation.x+=(0-bodyPivot.rotation.x)*0.08;
+    const breath=Math.sin(phase*0.6)*0.018;
+    bodyPivot.position.y=0.22+breath; bodyPivot.scale.set(1,1+breath*1.5,1);
+    neckPivot.rotation.x=-0.05+Math.sin(phase*0.5)*0.04;
+    for(const {hp,kp} of [legFL,legFR,legBL,legBR]){
+      hp.rotation.x+=(0-hp.rotation.x)*0.12; kp.rotation.x+=(0.12-kp.rotation.x)*0.12;
+    }
+    tailBase.rotation.x=0.5+Math.sin(phase*0.4)*0.1;
+    tailBase.rotation.z=Math.sin(phase*0.7)*0.25;
+    tailMid.rotation.z=Math.sin(phase*0.7-0.3)*0.20;
+    tailTip.rotation.z=Math.sin(phase*0.7-0.6)*0.18;
+  }
+}
+
+function tickCat(cat){
+  if(!cat.mesh)return;
+  cat.T+=.016;
+
+  // Idle timer → yawn or stretch
+  if(!cat.specialAnim&&(cat.state==='pausing'||cat.state==='sitting'||cat.state==='lounging')){
+    cat._idleTime=(cat._idleTime||0)+1;
+    if(cat._idleTime>200&&Math.random()<0.003){
+      cat.specialAnim=Math.random()<0.5?'yawn':'stretch';
+      cat.specialPhase=0; cat._idleTime=0;
+    }
+  } else if(cat.state==='walking'){ cat._idleTime=0; }
+
+  // Advance special anim phase
+  if(cat.specialAnim&&cat.specialAnim!=='zoomies'&&cat.specialAnim!=='chase'){
+    cat.specialPhase=(cat.specialPhase||0)+0.012;
+    if(cat.specialAnim!=='drink'&&cat.specialPhase>=1.0){
+      cat.specialAnim=null; cat.specialPhase=0;
+      if(wRig) try{wRig.neckPivot.scale.setScalar(1);}catch(e){}
+    }
+  }
+
+  const isZoomies = cat.specialAnim==='zoomies';
+  const isWalking=(cat.state==='walking'||cat.state==='jumping');
+  if(isWalking) cat.phase += isZoomies ? 0.22 : 0.055;
+  else          cat.phase += 0.018;
+
+  if(cat===cats.winston){ wRig=cat.rig; animateWinston(isWalking,cat.phase,cat.state==='sitting',cat.specialAnim,cat.specialPhase||0); }
+  else{ const sv=wRig; wRig=cat.rig; animateWinston(isWalking,cat.phase,cat.state==='sitting',cat.specialAnim,cat.specialPhase||0); wRig=sv; }
+  const other=cat===cats.winston?cats.griffey:cats.winston;
+  if(other.active&&other.mesh&&cat.state==='walking'&&!cat.specialAnim&&Math.random()<0.0004){
+    cat.path=[{x:other.mesh.position.x+(Math.random()-0.5)*0.5,y:CAT_FOOT,z:other.mesh.position.z+(Math.random()-0.5)*0.5,sc:1.0,kind:'chase'},...buildWinstonPath()];
+    cat.idx=0; cat.specialAnim='zoomies'; cat._zoomiesLeft=180+Math.floor(Math.random()*120);
+    setHint('😼 Chase time!');
+  }
+
+  // Zoomies trigger
+  if(!cat.specialAnim&&cat.state==='walking'&&Math.random()<0.0002){
+    cat.specialAnim='zoomies';
+    // Generate a big looping path around the room — no pausing at corners
+    cat.path=[
+      {x:ROOM*0.05,y:CAT_FOOT,z:ROOM*0.05,sc:1.0,kind:'zoomies'},
+      {x:ROOM*0.95,y:CAT_FOOT,z:ROOM*0.05,sc:1.0,kind:'zoomies'},
+      {x:ROOM*0.95,y:CAT_FOOT,z:ROOM*0.95,sc:1.0,kind:'zoomies'},
+      {x:ROOM*0.05,y:CAT_FOOT,z:ROOM*0.95,sc:1.0,kind:'zoomies'},
+      {x:ROOM*0.50,y:CAT_FOOT,z:ROOM*0.20,sc:1.0,kind:'zoomies'},
+      {x:ROOM*0.05,y:CAT_FOOT,z:ROOM*0.50,sc:1.0,kind:'zoomies'},
+      {x:ROOM*0.95,y:CAT_FOOT,z:ROOM*0.50,sc:1.0,kind:'zoomies'},
+      {x:ROOM*0.50,y:CAT_FOOT,z:ROOM*0.80,sc:1.0,kind:'zoomies'},
+    ];
+    cat.idx=0; cat._zoomiesLeft=300+Math.floor(Math.random()*180);
+    setHint('⚡ ZOOMIES!');
+  }
+  if(cat.specialAnim==='zoomies'){
+    cat._zoomiesLeft=(cat._zoomiesLeft||0)-1;
+    if(cat._zoomiesLeft<=0){cat.specialAnim=null;cat.path=buildWinstonPath();cat.idx=0;}
+  }
+
+  if(cat.state==='idle'){ cat.mesh.position.y=CAT_FOOT+Math.sin(cat.T*0.6)*0.03; return; }
+
   if(cat.state==='lounging'){
-    // Cat is in hammock — gently sway, stay put a long time
     if(cat.lounge){
       cat.lounge.t++;
-      const sway = Math.sin(cat.T * 0.4) * 0.015;
-      cat.mesh.position.y = cat.lounge.y + sway;
-      cat.mesh.rotation.z = Math.sin(cat.T * 0.35) * 0.04; // gentle rock
-      if(cat.lounge.t >= cat.lounge.dur){
-        cat.mesh.rotation.z = 0;
-        cat.lounge = null;
-        cat.state = 'walking';
-      }
-    } else {
-      cat.state = 'walking';
-    }
+      cat.mesh.position.y=cat.lounge.y+Math.sin(cat.T*0.4)*0.015;
+      cat.mesh.rotation.z=Math.sin(cat.T*0.35)*0.04;
+      if(cat.lounge.t>=cat.lounge.dur){cat.mesh.rotation.z=0;cat.lounge=null;cat.state='walking';}
+    } else cat.state='walking';
+    return;
+  }
+
+  if(cat.state==='sitting'){
+    if(cat.sitData){
+      cat.sitData.t++;
+      cat.mesh.position.y=cat.sitData.y+Math.sin(cat.T*0.5)*0.01;
+      cat.mesh.rotation.z=Math.sin(cat.T*0.25)*0.02;
+      if(cat.sitData.t>=cat.sitData.dur){cat.mesh.rotation.z=0;cat.sitData=null;cat.state='walking';}
+    } else cat.state='walking';
+    return;
+  }
+
+  if(cat.state==='drinking'){
+    if(cat.drinkData){
+      cat.drinkData.t++;
+      cat.mesh.position.y=cat.drinkData.y;
+      if(cat.drinkData.t>=cat.drinkData.dur){cat.drinkData=null;cat.specialAnim=null;cat.specialPhase=0;cat.state='walking';}
+    } else cat.state='walking';
     return;
   }
 
   if(cat.state==='pausing'){
-    // Gentle idle bob while sitting/standing
-    const target = cat.path[(cat.idx - 1 + cat.path.length) % cat.path.length];
-    if(target) cat.mesh.position.y = target.y + Math.sin(cat.T*0.8)*0.02;
+    const target=cat.path[(cat.idx-1+cat.path.length)%cat.path.length];
+    if(target) cat.mesh.position.y=target.y+Math.sin(cat.T*0.8)*0.02;
     cat.pause--;
+    // Knock something off shelves at midpoint of pause
+    if(target&&target.kind==='shelf'&&cat.pause===Math.floor(pauseDuration(target)*0.5)){
+      spawnKnockObject(cat.mesh.position.x+(Math.random()-0.5)*0.3,cat.mesh.position.y+0.1,cat.mesh.position.z);
+      setHint('\uD83D\uDE08 Knocked something off!');
+    }
     if(cat.pause<=0) cat.state='walking';
     return;
   }
 
   if(cat.state==='jumping'){
     if(!cat.jump){cat.state='walking';return;}
-    // Slow graceful arc
-    cat.jump.t += 0.012;
-    const tt = Math.min(cat.jump.t/cat.jump.dur, 1);
-    // Ease in-out for smooth landing
-    const ease = tt < 0.5 ? 2*tt*tt : -1+(4-2*tt)*tt;
-    cat.mesh.position.x = cat.jump.fromX+(cat.jump.toX-cat.jump.fromX)*ease;
-    cat.mesh.position.z = cat.jump.fromZ+(cat.jump.toZ-cat.jump.fromZ)*ease;
-    const baseY = cat.jump.fromY+(cat.jump.toY-cat.jump.fromY)*ease;
-    cat.mesh.position.y = baseY + Math.sin(tt*Math.PI)*cat.jump.arcH;
-    // Tilt forward during jump
-    cat.mesh.rotation.x = Math.sin(tt*Math.PI) * -0.2;
-    if(tt>=1){
-      cat.mesh.rotation.x = 0;
-      cat.jump=null;
-      cat.state='pausing';
-      cat.pause = pauseDuration(cat.path[cat.idx]);
-    }
+    cat.jump.t+=0.012;
+    const tt=Math.min(cat.jump.t/cat.jump.dur,1);
+    const ease=tt<0.5?2*tt*tt:-1+(4-2*tt)*tt;
+    cat.mesh.position.x=cat.jump.fromX+(cat.jump.toX-cat.jump.fromX)*ease;
+    cat.mesh.position.z=cat.jump.fromZ+(cat.jump.toZ-cat.jump.fromZ)*ease;
+    cat.mesh.position.y=cat.jump.fromY+(cat.jump.toY-cat.jump.fromY)*ease+Math.sin(tt*Math.PI)*cat.jump.arcH;
+    cat.mesh.rotation.x=Math.sin(tt*Math.PI)*-0.2;
+    if(tt>=1){cat.mesh.rotation.x=0;cat.jump=null;cat.state='pausing';cat.pause=pauseDuration(cat.path[cat.idx]);}
     return;
   }
 
   if(cat.state==='walking'){
     const target=cat.path[cat.idx];
     if(!target){cat.idx=0;return;}
-    const dx=target.x-cat.mesh.position.x;
-    const dy=target.y-cat.mesh.position.y;
-    const dz=target.z-cat.mesh.position.z;
+    const dx=target.x-cat.mesh.position.x, dy=target.y-cat.mesh.position.y, dz=target.z-cat.mesh.position.z;
     const dist=Math.sqrt(dx*dx+dy*dy+dz*dz);
-    const tsc=target.sc||0.85;
+    const spd = isZoomies ? 0.10 : 0.018;
 
     if(dist>.08){
-      // Slow amble — 0.018 units/frame ≈ 1 unit/sec, about right for a cat strolling
-      const spd = 0.018;
-      cat.mesh.position.x += dx/dist*spd;
-      cat.mesh.position.z += dz/dist*spd;
-      cat.mesh.position.y += dy/dist*spd;
-
-      // Smooth rotation toward travel direction
+      cat.mesh.position.x+=dx/dist*spd; cat.mesh.position.z+=dz/dist*spd;
+      if(Math.abs(dy)>0.05) cat.mesh.position.y+=dy/dist*spd; else cat.mesh.position.y=target.y;
       if(Math.abs(dx)>.01||Math.abs(dz)>.01){
-        const ta=Math.atan2(dx,dz);
-        let diff=ta-cat.mesh.rotation.y;
-        while(diff>Math.PI)  diff-=Math.PI*2;
-        while(diff<-Math.PI) diff+=Math.PI*2;
-        cat.mesh.rotation.y += diff * 0.08; // slow turn
+        const ta=Math.atan2(dx,dz); let diff=ta-cat.mesh.rotation.y;
+        while(diff>Math.PI)diff-=Math.PI*2; while(diff<-Math.PI)diff+=Math.PI*2;
+        cat.mesh.rotation.y+=diff*(isZoomies?0.30:0.08);
       }
-      cat.mesh.scale.setScalar(tsc);
+      cat.mesh.scale.setScalar(target.sc||0.85);
     } else {
-      // Arrived at target
-      cat.mesh.scale.setScalar(tsc);
-      cat.mesh.position.set(target.x, target.y, target.z);
-
+      cat.mesh.scale.setScalar(target.sc||0.85);
+      cat.mesh.position.set(target.x,target.y,target.z);
       const nextIdx=(cat.idx+1)%cat.path.length;
       const next=cat.path[nextIdx];
       cat.idx=nextIdx;
 
-      if(target.kind==='hammock'){
-        // Settle into hammock for a long lounge
-        cat.state='lounging';
-        cat.lounge={t:0, dur:pauseDuration(target), y:target.y};
+      // During zoomies — never pause, just keep sprinting
+      if(isZoomies){
+        cat.state='walking';
+      } else if(target.kind==='bed'){
+        cat.state='sitting'; cat.sitData={t:0,dur:240+Math.floor(Math.random()*360),y:target.y};
+      } else if(target.kind==='fountain'){
+        cat.state='drinking'; cat.specialAnim='drink'; cat.specialPhase=0;
+        cat.drinkData={t:0,dur:180+Math.floor(Math.random()*120),y:target.y};
+        setHint('\uD83D\uDCA7 Drinking from the fountain!');
+      } else if(target.kind==='hammock'){
+        cat.state='lounging'; cat.lounge={t:0,dur:pauseDuration(target),y:target.y};
       } else if(next){
         const hd=Math.abs(next.y-target.y);
-        const cross=(target.kind!==next.kind);
-        if(cross||hd>1.0){
-          cat.state='jumping';
-          cat.jump={fromX:target.x,fromY:target.y,fromZ:target.z,
-                    toX:next.x,toY:next.y,toZ:next.z,t:0,dur:1,
-                    arcH:Math.max(hd*0.4,0.5)};
-        } else {
-          cat.state='pausing';
-          cat.pause=pauseDuration(target);
-        }
-      } else {
-        cat.state='pausing';
-        cat.pause=pauseDuration(target);
-      }
+        if(hd>1.2){ cat.state='jumping'; cat.jump={fromX:target.x,fromY:target.y,fromZ:target.z,toX:next.x,toY:next.y,toZ:next.z,t:0,dur:1,arcH:Math.max(hd*0.3,0.35)}; }
+        else { cat.state='pausing'; cat.pause=pauseDuration(target); }
+      } else { cat.state='pausing'; cat.pause=pauseDuration(target); }
     }
   }
 }
@@ -1749,6 +2273,7 @@ function tickCat(cat){
 function tickWinston(){
   tickCat(cats.winston);
   tickCat(cats.griffey);
+  tickKnockObjects();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1765,7 +2290,6 @@ function getRay(ex,ey){
 
 function getFloorPos(ex,ey){
   const ray=getRay(ex,ey);
-  // Try top faces of placed boxes first
   let best=null,bestD=Infinity;
   for(const it of placed){
     if(it.type!=='floor') continue;
@@ -1790,22 +2314,17 @@ function getFloorPos(ex,ey){
 function getWallPos(ex,ey){
   const ray=getRay(ex,ey);
   const pt=new THREE.Vector3();
-  // Try back wall first
   const ptB=new THREE.Vector3();
   const ptL=new THREE.Vector3();
   const hitB=ray.ray.intersectPlane(BACK_WALL_PLANE,ptB);
   const hitL=ray.ray.intersectPlane(LEFT_WALL_PLANE,ptL);
-  // Pick the wall whose intersection is closer to the ray origin
-  // and within the room bounds — prefer whichever the user is aimed at
   let wall='back', pt2=ptB;
   if(hitL && ptL.z>=0 && ptL.z<=ROOM && ptL.y>=0){
     if(!hitB || !ptB.x || ptB.x<0){
       wall='left'; pt2=ptL;
     } else {
-      // pick whichever is closer to camera
       const dB=camera.position.distanceTo(ptB);
       const dL=camera.position.distanceTo(ptL);
-      // bias toward back wall unless clearly aiming at left wall (ptL.x < 1)
       if(ptL.x < 0.5 && dL < dB) { wall='left'; pt2=ptL; }
     }
   }
@@ -1876,7 +2395,7 @@ function zc(d){rad=Math.max(5,Math.min(28,rad+d));updateCam();}
 function setHint(t){document.getElementById('hint').textContent=t;}
 
 // ═══════════════════════════════════════════════════════════
-// INIT — build the room
+// INIT
 // ═══════════════════════════════════════════════════════════
 function init(){
   scene=new THREE.Scene();
@@ -1893,7 +2412,6 @@ function init(){
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   mount.appendChild(renderer.domElement);
 
-  // Lights
   scene.add(new THREE.AmbientLight(0xfff8f0,.82));
   const sun=new THREE.DirectionalLight(0xfff4e0,.88);
   sun.position.set(8,16,10); sun.castShadow=true;
@@ -1904,48 +2422,37 @@ function init(){
   const fill=new THREE.DirectionalLight(0xd8e8ff,.22);
   fill.position.set(-6,8,-4); scene.add(fill);
 
-  // ── ROOM GEOMETRY ──
-  const wallM=new THREE.MeshLambertMaterial({color:C.wallColor,side:THREE.BackSide});
-  const floorM=new THREE.MeshLambertMaterial({color:C.floorColor});
-
-  // Floor
+  const wallM  = new THREE.MeshBasicMaterial({color:C.wallColor, side:THREE.DoubleSide});
+  const floorM = new THREE.MeshBasicMaterial({color:C.floorColor});
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(ROOM,ROOM),floorM);
   floor.rotation.x=-Math.PI/2; floor.position.set(ROOM/2,0,ROOM/2); floor.receiveShadow=true; scene.add(floor);
+  _floorMesh = floor;
 
-  // Back wall (z=-0.1 so box holes at z=0 are visible in front of it)
-  const backWall=new THREE.Mesh(new THREE.PlaneGeometry(ROOM,WALL_H),new THREE.MeshLambertMaterial({color:C.wallColor,side:THREE.DoubleSide}));
+  const backWall=new THREE.Mesh(new THREE.PlaneGeometry(ROOM,WALL_H),wallM);
   backWall.position.set(ROOM/2,WALL_H/2,-0.1); backWall.receiveShadow=true; scene.add(backWall);
+  _backWallMesh = backWall;
 
-  // Left wall (x=0)
-  const leftWall=new THREE.Mesh(new THREE.PlaneGeometry(ROOM,WALL_H),new THREE.MeshLambertMaterial({color:0xd0c8bc,side:THREE.DoubleSide}));
+  const leftWall=new THREE.Mesh(new THREE.PlaneGeometry(ROOM,WALL_H),wallM);
   leftWall.rotation.y=Math.PI/2; leftWall.position.set(-0.1,WALL_H/2,ROOM/2); leftWall.receiveShadow=true; scene.add(leftWall);
+  _leftWallMesh = leftWall;
 
-  // Room edge trim
+  window._roomMats = { wall: wallM, floor: floorM };
+
   const em=new THREE.LineBasicMaterial({color:C.roomEdge,transparent:true,opacity:.55});
   function roomLine(...pts){ scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts.map(p=>new THREE.Vector3(...p))),em)); }
-  // floor edges
   roomLine([0,0,0],[ROOM,0,0],[ROOM,0,ROOM],[0,0,ROOM],[0,0,0]);
-  // vertical corners
   roomLine([0,0,0],[0,WALL_H,0]);
   roomLine([ROOM,0,0],[ROOM,WALL_H,0]);
   roomLine([0,0,ROOM],[0,WALL_H,ROOM]);
-  // top edges of visible walls
-  roomLine([0,WALL_H,0],[ROOM,WALL_H,0]); // back wall top
-  roomLine([0,WALL_H,0],[0,WALL_H,ROOM]); // left wall top
+  roomLine([0,WALL_H,0],[ROOM,WALL_H,0]);
+  roomLine([0,WALL_H,0],[0,WALL_H,ROOM]);
 
-  // Floor grid
-  const gm=new THREE.LineBasicMaterial({color:0xb8a888,transparent:true,opacity:.45});
+  const gm=new THREE.LineBasicMaterial({color:0x888070,transparent:true,opacity:.25});
   for(let i=0;i<=ROOM;i++){
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(i,0,0),new THREE.Vector3(i,0,ROOM)]),gm));
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,i),new THREE.Vector3(ROOM,0,i)]),gm));
   }
-  // Alternating floor squares
-  for(let x=0;x<ROOM;x++) for(let z=0;z<ROOM;z++) if((x+z)%2===0){
-    const sq=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0xc0b494,transparent:true,opacity:.3}));
-    sq.rotation.x=-Math.PI/2; sq.position.set(x+.5,.001,z+.5); scene.add(sq);
-  }
 
-  // Back wall grid
   const wgm=new THREE.LineBasicMaterial({color:0xc0b8aa,transparent:true,opacity:.4});
   for(let x=0;x<=ROOM;x++){
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x,0,-0.08),new THREE.Vector3(x,WALL_H,-0.08)]),wgm));
@@ -1953,7 +2460,6 @@ function init(){
   for(let y=0;y<=WALL_H;y++){
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,y,-0.08),new THREE.Vector3(ROOM,y,-0.08)]),wgm));
   }
-  // Left wall grid (x=-0.08 plane, runs along Z)
   const lwgm=new THREE.LineBasicMaterial({color:0xb8b0a4,transparent:true,opacity:.38});
   for(let z=0;z<=ROOM;z++){
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.08,0,z),new THREE.Vector3(-0.08,WALL_H,z)]),lwgm));
@@ -1962,19 +2468,15 @@ function init(){
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.08,y,0),new THREE.Vector3(-0.08,y,ROOM)]),lwgm));
   }
 
-  // Events
   renderer.domElement.addEventListener('mousedown',onDown);
   renderer.domElement.addEventListener('mousemove',onMove);
   renderer.domElement.addEventListener('mouseup',onUp);
   renderer.domElement.addEventListener('mouseleave',clearGhost);
   renderer.domElement.addEventListener('wheel',e=>{rad=Math.max(5,Math.min(28,rad+e.deltaY*.018));updateCam();},{passive:true});
 
-  // ── TOUCH EVENTS ──
   let tLast=null, tPinchD=null, tStartTime=0, tTotalMove=0;
-  // TAP_THRESHOLD: must move less than this to count as a tap (not a drag)
-  // Using 18px — generous enough for shaky fingers, strict enough to ignore orbiting
   const TAP_THRESHOLD = 18;
-  const TAP_MAX_MS    = 300; // must lift within 300ms to count as tap
+  const TAP_MAX_MS    = 300;
 
   renderer.domElement.addEventListener('touchstart',e=>{
     e.preventDefault();
@@ -1987,7 +2489,6 @@ function init(){
       tStartTime=Date.now();
       tPinchD=null;
     } else if(e.touches.length===2){
-      // Two fingers — definitely not a tap
       dragging=true;
       tPinchD=Math.hypot(
         e.touches[0].clientX-e.touches[1].clientX,
@@ -2011,7 +2512,6 @@ function init(){
       const t=e.touches[0];
       const dx=t.clientX-tLast.x, dy=t.clientY-tLast.y;
       tTotalMove += Math.hypot(dx,dy);
-      // Only start orbiting once we've clearly moved — avoids accidental rotations
       if(tTotalMove > TAP_THRESHOLD){
         dragging=true;
         theta-=dx*.007;
@@ -2025,7 +2525,6 @@ function init(){
   renderer.domElement.addEventListener('touchend',e=>{
     e.preventDefault();
     const elapsed = Date.now() - tStartTime;
-    // Only place if: not dragging, moved very little, and lifted quickly
     const isTap = !dragging && tTotalMove < TAP_THRESHOLD && elapsed < TAP_MAX_MS;
     if(isTap && e.changedTouches.length===1){
       const t=e.changedTouches[0];
@@ -2051,9 +2550,109 @@ function loop(){
   requestAnimationFrame(loop);
   tickWinston();
   tickWindow();
-  // Gentle ghost float
+  tickSpeechBubbles();
   if(ghost) ghost.position.y=ghostTarget.y+Math.sin(Date.now()*.003)*.04;
   renderer.render(scene,camera);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SPEECH BUBBLES
+// ═══════════════════════════════════════════════════════════
+const PHRASES = {
+  idle:     ['...','zzzz','😴','*stares at wall*','i am thinking','hmm'],
+  walking:  ['on my way','exploring~','sniff sniff','what\'s over here?','*trots purposefully*'],
+  sitting:  ['so cosy 😌','purrfect bed','*kneads blanket*','5 more minutes','comfy af'],
+  lounging: ['living my best life','don\'t disturb','*hammock sway*','ahhhh','this is the life 😌'],
+  bed:      ['purrfect','*slow blink*','needs more boxes','could use a snack','nap time 😴'],
+  fountain: ['refreshing 💧','*laps water*','hydration check','fancy fountain 👌'],
+  zoomies:  ['ZOOMIES!!','AAAAAA','nyoom','no thoughts, only run','⚡⚡⚡','CAN\'T STOP WON\'T STOP'],
+  chase:    ['I SEE YOU','come here!!','😼','tag!!','catch me if you can'],
+  yawn:     ['*yawwwwn*','so sleepy','excuse me~','*stretches jaw*'],
+  stretch:  ['*big stretch*','ahhhh','that\'s the stuff','mmmm','yoga time 🧘'],
+  noFurniture: ['needs more boxes','where\'s my stuff?','this room is bare','*judging you*','more furniture pls'],
+};
+
+// Per-cat bubble state
+const bubbles = {};
+function getBubbleEl(name){
+  if(!bubbles[name]){
+    const el = document.createElement('div');
+    el.className = 'speech-bubble';
+    el.id = 'bubble-'+name;
+    el.style.opacity = '0';
+    document.querySelector('.canvas-area').appendChild(el);
+    bubbles[name] = {el, visible:false, timer:0, cooldown:0};
+  }
+  return bubbles[name];
+}
+
+function showBubble(name, text, duration=2800){
+  const b = getBubbleEl(name);
+  b.el.textContent = text;
+  b.el.style.opacity = '1';
+  b.visible = true;
+  b.timer = duration;
+}
+
+function pickPhrase(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+// Project a 3D world position to 2D screen coords
+function worldToScreen(pos){
+  const v = pos.clone().project(camera);
+  const rect = renderer.domElement.getBoundingClientRect();
+  return {
+    x: (v.x * 0.5 + 0.5) * rect.width  + rect.left,
+    y: (-v.y * 0.5 + 0.5) * rect.height + rect.top,
+  };
+}
+
+function tickSpeechBubbles(){
+  ['winston','griffey'].forEach(name=>{
+    const cat = cats[name];
+    const b   = getBubbleEl(name);
+
+    // Count down cooldown between bubbles
+    if(b.cooldown > 0){ b.cooldown--; }
+
+    // Count down visible timer
+    if(b.visible){
+      b.timer -= 16;
+      if(b.timer <= 0){
+        b.el.style.opacity = '0';
+        b.visible = false;
+        b.cooldown = 280 + Math.floor(Math.random()*400); // ~5-11s gap
+      }
+    }
+
+    // Position bubble above cat head
+    if(cat.mesh){
+      const headPos = cat.mesh.position.clone();
+      headPos.y += 0.65; // above head
+      const sc = worldToScreen(headPos);
+      b.el.style.left = sc.x + 'px';
+      b.el.style.top  = sc.y + 'px';
+    }
+
+    if(!cat.active || !cat.mesh || b.visible || b.cooldown > 0) return;
+
+    // Decide whether to show a bubble this frame (small random chance)
+    if(Math.random() > 0.004) return;
+
+    // Pick phrase based on current state
+    let phrase;
+    if(cat.specialAnim==='zoomies')        phrase = pickPhrase(PHRASES.zoomies);
+    else if(cat.specialAnim==='chase')      phrase = pickPhrase(PHRASES.chase);
+    else if(cat.specialAnim==='yawn')       phrase = pickPhrase(PHRASES.yawn);
+    else if(cat.specialAnim==='stretch')    phrase = pickPhrase(PHRASES.stretch);
+    else if(cat.state==='sitting')          phrase = pickPhrase(PHRASES.sitting);
+    else if(cat.state==='lounging')         phrase = pickPhrase(PHRASES.lounging);
+    else if(cat.state==='drinking')         phrase = pickPhrase(PHRASES.fountain);
+    else if(cat.state==='idle')             phrase = pickPhrase(placed.length===0 ? PHRASES.noFurniture : PHRASES.idle);
+    else if(cat.state==='walking')          phrase = pickPhrase(PHRASES.walking);
+    else                                    phrase = pickPhrase(PHRASES.idle);
+
+    showBubble(name, phrase, 2200 + Math.floor(Math.random()*1200));
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2072,8 +2671,9 @@ function thumbBox(p){
 }
 
 function thumbWall(p){
-  const ox=6,oy=22,s=8;
+  const oy=22,s=8;
   const pw=Math.min(p.w,4)*s, ph=Math.min(p.h,3.5)*s;
+  const ox = (46 - pw) / 2; // centred horizontally in 46px canvas
   if(p.id==='w_post') return `<rect x="${ox}" y="${oy-ph}" width="${pw}" height="${ph}" rx="3" fill="#b09060" stroke="#7a4c1c" stroke-width="1"/>`;
   if(p.id==='w_box'){
     const hr=Math.min(pw,ph)*.28;
@@ -2081,7 +2681,6 @@ function thumbWall(p){
             <circle cx="${ox+pw/2}" cy="${oy-ph/2}" r="${hr}" fill="#180c02" stroke="#8a5820" stroke-width=".8"/>`;
   }
   if(p.id==='w_ladder'){
-    // Rope bridge: sagging ropes with slats
     const pts = Array.from({length:10},(_,i)=>{
       const t=(i+0.5)/10, x=5+t*36, y=22-Math.sin(t*Math.PI)*8;
       return `<rect x="${(x-1.5).toFixed(1)}" y="${(y-2).toFixed(1)}" width="3.5" height="3" rx="0.5" fill="#d4a050"/>`;
@@ -2093,12 +2692,30 @@ function thumbWall(p){
             <rect x="38" y="12" width="5" height="10" rx="1" fill="#8a5820"/>`;
   }
   if(p.id==='w_hammock'){
-    // Circular rim + sagging fabric bowl inside
     return `<circle cx="23" cy="19" r="13" fill="none" stroke="#d4a050" stroke-width="3.5"/>
             <path d="M11,16 Q23,30 35,16" fill="#d4c8b8" stroke="none"/>
             <path d="M11,16 Q23,30 35,16" fill="none" stroke="#b8aa98" stroke-width="1"/>
             <rect x="9" y="17" width="4" height="3" rx="1" fill="#8a5820"/>
             <rect x="33" y="17" width="4" height="3" rx="1" fill="#8a5820"/>`;
+  }
+  if(p.id==='w_picture'){
+    return `
+      <rect x="6" y="4" width="34" height="28" rx="1" fill="#5a3810"/>
+      <rect x="9" y="7" width="28" height="22" fill="#87ceeb"/>
+      <rect x="9" y="21" width="28" height="8" fill="#7ab848"/>
+      <circle cx="28" cy="13" r="5" fill="#ffe040"/>
+      <ellipse cx="19" cy="22" rx="7" ry="6" fill="#ffffff"/>
+      <ellipse cx="19" cy="13" rx="5" ry="5" fill="#ffffff"/>
+      <ellipse cx="21" cy="11" rx="2" ry="3" fill="#e03030"/>
+      <ellipse cx="24" cy="15" rx="2" ry="2.5" fill="#e03030"/>
+      <ellipse cx="24.5" cy="13.5" rx="2.5" ry="1.5" fill="#f0b020"/>
+      <circle cx="21" cy="13" r="1.8" fill="#ffffff"/>
+      <circle cx="21.5" cy="13" r="1.2" fill="#1a1a1a"/>
+      <rect x="8" y="3" width="30" height="3" rx="1" fill="#8b5e2a"/>
+      <rect x="8" y="28" width="30" height="3" rx="1" fill="#8b5e2a"/>
+      <rect x="8" y="3" width="3" height="28" rx="1" fill="#8b5e2a"/>
+      <rect x="35" y="3" width="3" height="28" rx="1" fill="#8b5e2a"/>
+    `;
   }
   if(p.id==='w_window'){
     return `
@@ -2113,16 +2730,41 @@ function thumbWall(p){
       <rect x="4" y="28" width="38" height="3" fill="#c8904a" rx="0.5"/>
     `;
   }
-  // shelf / wide shelf
   return `<rect x="${ox}" y="${oy-ph}" width="${pw}" height="${ph}" fill="#d4a050" stroke="#7a4c1c" stroke-width="1" rx="1"/>
           <rect x="${ox+pw*.35}" y="${oy}" width="${pw*.3}" height="${s*.5}" fill="#8a5820" rx="1"/>`;
 }
 
 function thumbSpecial(p){
+  if(p.id==='f_bed'){
+    return `
+      <ellipse cx="23" cy="29" rx="16" ry="4" fill="#6a4a30"/>
+      <rect x="7" y="20" width="32" height="9" fill="#a07858"/>
+      <ellipse cx="23" cy="20" rx="16" ry="4" fill="#c8a878"/>
+      <ellipse cx="23" cy="20" rx="8.5" ry="2.2" fill="#4a2e18"/>
+      <ellipse cx="23" cy="19.5" rx="8" ry="2" fill="#ecdcb8"/>
+      <ellipse cx="21" cy="19" rx="3" ry="0.9" fill="#fff4e0" opacity="0.85"/>
+    `;
+  }
+  if(p.id==='f_fountain'){
+    return `
+      <ellipse cx="23" cy="29" rx="16" ry="4" fill="#d0ccc4" stroke="#a8a098" stroke-width="1"/>
+      <ellipse cx="23" cy="27" rx="14" ry="3.5" fill="#7ac8f0" opacity="0.7"/>
+      <ellipse cx="23" cy="25" rx="8" ry="2.5" fill="#d0ccc4"/>
+      <rect x="21" y="11" width="4" height="14" rx="1.5" fill="#e0dcd6"/>
+      <ellipse cx="23" cy="11" rx="8" ry="2.5" fill="#5a9ec8"/>
+      <ellipse cx="23" cy="10" rx="5" ry="1.5" fill="#e0dcd6"/>
+      <path d="M15,25 Q16,18 19,13" fill="none" stroke="#7ac8f0" stroke-width="1.5" opacity="0.8"/>
+      <path d="M31,25 Q30,18 27,13" fill="none" stroke="#7ac8f0" stroke-width="1.5" opacity="0.8"/>
+    `;
+  }
+  if(p.id==='f_bowl'){
+    return `<ellipse cx="23" cy="22" rx="14" ry="5" fill="#e05858" stroke="#c03838" stroke-width="1"/>
+            <ellipse cx="23" cy="20" rx="12" ry="4" fill="#c87840"/>
+            <ellipse cx="23" cy="28" rx="8"  ry="2" fill="#c03838"/>`;
+  }
   if(p.id==='f_tunnel'||p.id==='f_tunnelx'){
     const isX = p.id==='f_tunnelx';
     if(!isX){
-      // Horizontal tunnel → : cylinder lying left-right
       return `
         <rect x="6" y="11" width="24" height="14" fill="#5a8a5a"/>
         <ellipse cx="30" cy="18" rx="5" ry="7" fill="#3a5a3a" stroke="#2a4a2a" stroke-width="1"/>
@@ -2132,7 +2774,6 @@ function thumbSpecial(p){
         <ellipse cx="6" cy="18" rx="5" ry="7" fill="#1a2a1a" stroke="#3a6a3a" stroke-width="1.5"/>
       `;
     } else {
-      // Vertical tunnel ↑ : cylinder standing top-bottom, shown from front
       return `
         <rect x="16" y="5" width="14" height="24" fill="#5a8a5a"/>
         <ellipse cx="23" cy="5"  rx="7" ry="4" fill="#3a5a3a" stroke="#2a4a2a" stroke-width="1"/>
@@ -2158,7 +2799,7 @@ function makeCard(p){
   const card=document.createElement('div');
   card.className='pcard'+(p===sel?' on':'');
   card.id='pc-'+p.id;
-  const isSpecial = TUNNEL_IDS.has(p.id)||PLANT_IDS.has(p.id);
+  const isSpecial = TUNNEL_IDS.has(p.id)||SPECIAL_IDS.has(p.id)||BED_IDS.has(p.id);
   const svg=BOX_IDS.has(p.id)||isSpecial ? thumbSpecial(p) : thumbWall(p);
   card.innerHTML=`<svg width="46" height="34" viewBox="0 0 46 34">${svg}</svg><span>${p.name}</span><span class="tag">${p.type==='wall'?'wall':'floor'}</span>`;
   card.onclick=()=>{
@@ -2174,7 +2815,7 @@ function makeCard(p){
 }
 
 function mobTab(name){
-  ['floor','wall'].forEach(t=>{
+  ['floor','wall','colours'].forEach(t=>{
     document.getElementById('mtab-'+t).classList.toggle('on',t===name);
     document.getElementById('mpanel-'+t).classList.toggle('on',t===name);
   });
@@ -2184,13 +2825,12 @@ function makeMobCard(p){
   const card=document.createElement('div');
   card.className='mob-pcard'+(p===sel?' on':'');
   card.id='mob-pc-'+p.id;
-  const isSpecial=TUNNEL_IDS.has(p.id)||PLANT_IDS.has(p.id);
+  const isSpecial=TUNNEL_IDS.has(p.id)||SPECIAL_IDS.has(p.id)||BED_IDS.has(p.id);
   const svg=BOX_IDS.has(p.id)||isSpecial?thumbSpecial(p):thumbWall(p);
   card.innerHTML=`<svg width="44" height="34" viewBox="0 0 46 34">${svg}</svg><span>${p.name}</span>`;
   card.onclick=()=>{
     document.querySelectorAll('.mob-pcard,.pcard').forEach(x=>x.classList.remove('on'));
     card.classList.add('on');
-    // Also highlight desktop card
     const dc=document.getElementById('pc-'+p.id);
     if(dc) dc.classList.add('on');
     sel=p;
@@ -2203,17 +2843,50 @@ function makeMobCard(p){
   return card;
 }
 
+let _floorMesh=null, _backWallMesh=null, _leftWallMesh=null;
+let _curWallHex='#fef3e2', _curFloorHex='#fef3e2';
+
+function hexToInt(h){ return parseInt(h.replace('#','').toLowerCase(),16); }
+function setWallColor(hex){
+  _curWallHex=hex;
+  const n=hexToInt(hex);
+  if(_backWallMesh) _backWallMesh.material.color.setHex(n);
+  if(_leftWallMesh)  _leftWallMesh.material.color.setHex(n);
+  document.querySelectorAll('.swatch[data-target="wall"]').forEach(s=>
+    s.classList.toggle('on', s.dataset.hex===hex));
+}
+function setFloorColor(hex){
+  _curFloorHex=hex;
+  const n=hexToInt(hex);
+  if(_floorMesh) _floorMesh.material.color.setHex(n);
+  document.querySelectorAll('.swatch[data-target="floor"]').forEach(s=>
+    s.classList.toggle('on', s.dataset.hex===hex));
+}
+
+function setRoomColour(target, hex){
+  if(target==='wall') setWallColor(hex);
+  else setFloorColor(hex);
+}
+
 function buildPanels(){
-  // Desktop panels
   const fe=document.getElementById('pg-floor');
   FLOOR_PIECES.forEach(p=>fe.appendChild(makeCard(p)));
   const we=document.getElementById('pg-wall');
   WALL_PIECES.forEach(p=>we.appendChild(makeCard(p)));
-  // Mobile panels
   const mfe=document.getElementById('mpanel-floor');
   FLOOR_PIECES.forEach(p=>mfe.appendChild(makeMobCard(p)));
   const mwe=document.getElementById('mpanel-wall');
   WALL_PIECES.forEach(p=>mwe.appendChild(makeMobCard(p)));
+
+  const wallSrc = document.getElementById('wall-swatches');
+  const floorSrc = document.getElementById('floor-swatches');
+  const mws = document.getElementById('mob-wall-swatches');
+  const mfs = document.getElementById('mob-floor-swatches');
+  if(mws && wallSrc) mws.innerHTML = wallSrc.innerHTML;
+  if(mfs && floorSrc) mfs.innerHTML = floorSrc.innerHTML;
+  document.querySelectorAll('#mob-wall-swatches .swatch, #mob-floor-swatches .swatch').forEach(s=>{
+    s.style.width='20px'; s.style.height='20px';
+  });
 }
 
 buildPanels();
