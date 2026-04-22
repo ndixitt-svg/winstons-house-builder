@@ -1466,6 +1466,9 @@ function placeWall(gx,gy,wall){
   popIn(g);
   updateCount();
   setHint(p.name+' placed on '+(wall==='left'?'left':'back')+' wall!');
+  // Spawn items on shelves
+  const newItem = placed[placed.length-1];
+  spawnShelfItems(newItem);
 }
 
 function popIn(g){
@@ -1481,7 +1484,7 @@ function popIn(g){
 
 function undoLast(){
   const last=placed.pop();
-  if(last) scene.remove(last.group);
+  if(last){ scene.remove(last.group); removeShelfItemsForPlaced(last); }
   if(last?.type==='floor') rebuild();
   updateCount();
 }
@@ -1541,6 +1544,7 @@ function deleteItem(item){
   const idx = placed.indexOf(item);
   if(idx !== -1) placed.splice(idx, 1);
   scene.remove(item.group);
+  removeShelfItemsForPlaced(item);
   if(item.type === 'floor') rebuild();
   updateCount();
   setHint('Item removed');
@@ -1579,6 +1583,8 @@ function doClearAll(){
 function clearAll(){
   placed.forEach(it=>scene.remove(it.group));
   placed=[];
+  shelfItems.forEach(o=>scene.remove(o.mesh));
+  shelfItems.length=0;
   Object.values(cats).forEach(cat=>{
     if(cat.mesh){scene.remove(cat.mesh);cat.mesh=null;}
     cat.active=false; cat.rig=null;
@@ -2563,27 +2569,249 @@ function pauseDuration(target){
 }
 
 // ═══ KNOCK OBJECTS OFF SHELVES ═══
-const knockObjects=[];
-function spawnKnockObject(x,y,z){
-  const cols=[0xe85858,0x58a0e8,0xe8c058,0x58e878,0xe858c0];
-  const col=cols[Math.floor(Math.random()*cols.length)];
-  const geo=Math.random()>0.5?new THREE.BoxGeometry(0.12,0.12,0.12):new THREE.CylinderGeometry(0.05,0.05,0.14,8);
-  const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:col}));
-  m.position.set(x,y,z); m.castShadow=true; scene.add(m);
-  knockObjects.push({mesh:m,vx:(Math.random()-0.5)*0.06,vy:0.04,vz:(Math.random()-0.5)*0.06+0.04,landed:false,life:0});
+// ═══ SHELF ITEMS — sit on shelves, get knocked off by cats ═══
+const shelfItems = []; // {mesh, onShelf, shelvedItem, vx,vy,vz, landed, life}
+
+const SHELF_ITEM_TYPES = ['fish','fish','tennis','tennis','mouse','mouse']; // weighted
+
+function buildShelfItemMesh(type){
+  const g = new THREE.Group();
+
+  if(type === 'fish'){
+    // Cat toy fish — plump teardrop body, bright fabric colours, fins, googly eye
+    const bodyM = new THREE.MeshLambertMaterial({color:0xff4466}); // hot pink toy colour
+    const finM  = new THREE.MeshLambertMaterial({color:0xff2244, side:THREE.DoubleSide});
+    const stripeM = new THREE.MeshLambertMaterial({color:0xffffff, transparent:true, opacity:0.55, side:THREE.DoubleSide});
+
+    // Main body — fat sphere squished into a teardrop
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.072,12,8), bodyM);
+    body.scale.set(1.55, 1.0, 0.88);
+    g.add(body);
+
+    // White belly patch
+    const belly = new THREE.Mesh(new THREE.SphereGeometry(0.048,10,6),
+      new THREE.MeshLambertMaterial({color:0xfff0f4}));
+    belly.scale.set(1.1,0.75,0.5);
+    belly.position.set(0.01,-0.02,0.06);
+    g.add(belly);
+
+    // Stripe rings around the body
+    for(const xOff of [-0.02, 0.04]){
+      const stripe = new THREE.Mesh(new THREE.TorusGeometry(0.068,0.009,5,14),stripeM);
+      stripe.rotation.y = Math.PI/2;
+      stripe.position.set(xOff,0,0);
+      g.add(stripe);
+    }
+
+    // Tail fin — forked fan shape
+    const tailShape = new THREE.Shape();
+    tailShape.moveTo(0, 0);
+    tailShape.lineTo(-0.045,  0.068);
+    tailShape.lineTo(-0.022,  0.008);
+    tailShape.lineTo(-0.045, -0.068);
+    tailShape.closePath();
+    const tail = new THREE.Mesh(new THREE.ShapeGeometry(tailShape), finM);
+    tail.position.set(-0.115, 0, 0);
+    g.add(tail);
+
+    // Top dorsal fin
+    const dorsalShape = new THREE.Shape();
+    dorsalShape.moveTo(-0.04, 0);
+    dorsalShape.lineTo( 0.04, 0);
+    dorsalShape.lineTo( 0.01, 0.06);
+    dorsalShape.lineTo(-0.03, 0.055);
+    dorsalShape.closePath();
+    const dorsal = new THREE.Mesh(new THREE.ShapeGeometry(dorsalShape), finM);
+    dorsal.position.set(0.01, 0.068, 0);
+    dorsal.rotation.x = -0.15;
+    g.add(dorsal);
+
+    // Googly eye — white sclera + dark pupil + shine
+    const sclera = new THREE.Mesh(new THREE.CircleGeometry(0.024,8),
+      new THREE.MeshBasicMaterial({color:0xffffff}));
+    sclera.position.set(0.088, 0.028, 0.062);
+    g.add(sclera);
+    const pupil = new THREE.Mesh(new THREE.CircleGeometry(0.014,8),
+      new THREE.MeshBasicMaterial({color:0x111111}));
+    pupil.position.set(0.089, 0.028, 0.063);
+    g.add(pupil);
+    const shine = new THREE.Mesh(new THREE.CircleGeometry(0.006,6),
+      new THREE.MeshBasicMaterial({color:0xffffff}));
+    shine.position.set(0.0895, 0.036, 0.0635);
+    g.add(shine);
+
+  } else if(type === 'tennis'){
+    // Tennis ball — yellow-green sphere with two curved white seam lines
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.068,14,10),
+      new THREE.MeshLambertMaterial({color:0xc8e020})); // tennis yellow-green
+    g.add(ball);
+
+    // Seam lines — two curved tubes that wrap around the ball like a real tennis ball
+    const seamM = new THREE.MeshLambertMaterial({color:0xffffff});
+    const r = 0.070;
+
+    // Build a seam curve: a sine-wave path around the sphere surface
+    function makeSeamCurve(offsetAngle){
+      const pts = [];
+      for(let i=0; i<=24; i++){
+        const t = (i/24) * Math.PI * 2;
+        const wave = Math.sin(t * 2) * 0.55; // how much the seam wiggles in latitude
+        const lat  = wave;
+        const lon  = t + offsetAngle;
+        pts.push(new THREE.Vector3(
+          r * Math.cos(lat) * Math.cos(lon),
+          r * Math.sin(lat),
+          r * Math.cos(lat) * Math.sin(lon)
+        ));
+      }
+      return new THREE.CatmullRomCurve3(pts, true);
+    }
+
+    for(const offset of [0, Math.PI]){
+      const seam = new THREE.Mesh(
+        new THREE.TubeGeometry(makeSeamCurve(offset), 48, 0.007, 5, true),
+        seamM
+      );
+      g.add(seam);
+    }
+
+  } else if(type === 'mouse'){
+    // Cat toy mouse — grey fabric mouse with round head, big ears, string tail
+    const furM  = new THREE.MeshLambertMaterial({color:0xa8a0a8});
+    const earM  = new THREE.MeshLambertMaterial({color:0xf0b0c0, side:THREE.DoubleSide});
+
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.062,10,8), furM);
+    body.scale.set(1.45,1,1); g.add(body);
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.046,10,8), furM);
+    head.position.set(0.082,0.008,0); g.add(head);
+
+    // Round ears
+    for(const s of [-1,1]){
+      const outerEar = new THREE.Mesh(new THREE.CircleGeometry(0.030,10), furM);
+      outerEar.position.set(0.092,0.058,s*0.030);
+      outerEar.rotation.y = s * 0.3;
+      g.add(outerEar);
+      const innerEar = new THREE.Mesh(new THREE.CircleGeometry(0.020,10), earM);
+      innerEar.position.set(0.093,0.058,s*0.031);
+      innerEar.rotation.y = s * 0.3;
+      g.add(innerEar);
+    }
+
+    // String tail — tube along a gentle curve
+    const tailCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.090, 0, 0),
+      new THREE.Vector3(-0.120, 0.030, 0),
+      new THREE.Vector3(-0.155, 0.010, 0),
+      new THREE.Vector3(-0.175, -0.015, 0),
+    ]);
+    const tail = new THREE.Mesh(
+      new THREE.TubeGeometry(tailCurve, 8, 0.007, 5, false),
+      new THREE.MeshLambertMaterial({color:0xc8a0b0})
+    );
+    g.add(tail);
+
+    // Eyes
+    for(const s of [-1,1]){
+      const eye = new THREE.Mesh(new THREE.CircleGeometry(0.012,6),
+        new THREE.MeshBasicMaterial({color:0x111111}));
+      eye.position.set(0.114,0.022,s*0.026);
+      g.add(eye);
+    }
+  }
+
+  g.castShadow = true;
+  return g;
 }
-function tickKnockObjects(){
-  for(let i=knockObjects.length-1;i>=0;i--){
-    const o=knockObjects[i]; o.life++;
+
+function spawnShelfItems(placedItem){
+  if(placedItem.piece.id !== 'w_shelf' && placedItem.piece.id !== 'w_wide') return;
+
+  // 50% chance of nothing at all — keeps it spontaneous
+  if(Math.random() < 0.5) return;
+
+  const p = placedItem.piece;
+  const shelfY = placedItem.gy + p.h + 0.065;
+
+  // 1 item, occasionally 2 on a wide shelf — never fully stocked
+  const maxCount = p.id === 'w_wide' ? 2 : 1;
+  const count = Math.random() < 0.35 ? maxCount : 1;
+
+  // Pick random positions along the shelf rather than evenly spaced
+  const usedFracs = [];
+  for(let i=0; i<count; i++){
+    let xFrac;
+    // Keep items from overlapping
+    do { xFrac = 0.15 + Math.random() * 0.7; }
+    while(usedFracs.some(f => Math.abs(f - xFrac) < 0.25));
+    usedFracs.push(xFrac);
+
+    const type = SHELF_ITEM_TYPES[Math.floor(Math.random()*SHELF_ITEM_TYPES.length)];
+    const mesh = buildShelfItemMesh(type);
+
+    let wx, wz;
+    if(placedItem.wall === 'left'){
+      wx = p.d/2;
+      wz = placedItem.gz + xFrac * p.w;
+    } else {
+      wx = placedItem.gx + xFrac * p.w;
+      wz = p.d/2;
+    }
+    mesh.position.set(wx, shelfY, wz);
+    mesh.rotation.y = Math.random() * Math.PI * 2;
+    scene.add(mesh);
+    shelfItems.push({
+      mesh, onShelf:true, shelf:placedItem,
+      wx, wy:shelfY, wz,
+      vx:0, vy:0, vz:0, landed:false, life:0
+    });
+  }
+}
+
+function knockOffShelfItem(nearX, nearZ){
+  // Find the closest shelved item to the cat
+  let best=null, bestD=Infinity;
+  for(const o of shelfItems){
+    if(!o.onShelf) continue;
+    const d = (o.wx-nearX)**2 + (o.wz-nearZ)**2;
+    if(d<bestD){ bestD=d; best=o; }
+  }
+  if(!best) return;
+  best.onShelf = false;
+  // Give it a nudge off the shelf
+  best.vx = (Math.random()-0.5)*0.08;
+  best.vy = 0.04;
+  best.vz = (Math.random()-0.5)*0.04 + 0.05;
+}
+
+function tickShelfItems(){
+  for(let i=shelfItems.length-1;i>=0;i--){
+    const o=shelfItems[i];
+    if(o.onShelf) continue;
+    o.life++;
     if(!o.landed){
-      o.vy-=0.006; o.mesh.position.x+=o.vx; o.mesh.position.y+=o.vy; o.mesh.position.z+=o.vz;
-      o.mesh.rotation.x+=0.08; o.mesh.rotation.z+=0.06;
-      if(o.mesh.position.y<=CAT_FOOT){
-        o.mesh.position.y=CAT_FOOT; o.vy*=-0.3; o.vx*=0.7; o.vz*=0.7;
-        if(Math.abs(o.vy)<0.008) o.landed=true;
+      o.vy -= 0.006;
+      o.mesh.position.x += o.vx;
+      o.mesh.position.y += o.vy;
+      o.mesh.position.z += o.vz;
+      o.mesh.rotation.x += 0.09;
+      o.mesh.rotation.z += 0.07;
+      if(o.mesh.position.y <= CAT_FOOT){
+        o.mesh.position.y = CAT_FOOT;
+        o.vy *= -0.28; o.vx *= 0.65; o.vz *= 0.65;
+        if(Math.abs(o.vy) < 0.008) o.landed = true;
       }
     }
-    if(o.life>480){scene.remove(o.mesh);knockObjects.splice(i,1);}
+    if(o.life > 500){ scene.remove(o.mesh); shelfItems.splice(i,1); }
+  }
+}
+
+function removeShelfItemsForPlaced(placedItem){
+  for(let i=shelfItems.length-1;i>=0;i--){
+    if(shelfItems[i].shelf === placedItem){
+      scene.remove(shelfItems[i].mesh);
+      shelfItems.splice(i,1);
+    }
   }
 }
 
@@ -2772,8 +3000,8 @@ function tickCat(cat){
     cat.pause--;
     // Knock something off shelves at midpoint of pause
     if(target&&target.kind==='shelf'&&cat.pause===Math.floor(pauseDuration(target)*0.5)){
-      spawnKnockObject(cat.mesh.position.x+(Math.random()-0.5)*0.3,cat.mesh.position.y+0.1,cat.mesh.position.z);
-      setHint('\uD83D\uDE08 Knocked something off!');
+      knockOffShelfItem(cat.mesh.position.x, cat.mesh.position.z);
+      setHint('😼 Knocked something off!');
     }
     if(cat.pause<=0) cat.state='walking';
     return;
@@ -2838,7 +3066,7 @@ function tickCat(cat){
 function tickWinston(){
   tickCat(cats.winston);
   tickCat(cats.custom);
-  tickKnockObjects();
+  tickShelfItems();
 }
 
 // ═══════════════════════════════════════════════════════════
