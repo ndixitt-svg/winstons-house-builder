@@ -47,6 +47,13 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
 .crow{display:flex;gap:3px}
 .cbtn{width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:rgba(250,247,242,.9);color:var(--text);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s;user-select:none;touch-action:manipulation}
 .cbtn:hover,.cbtn:active{background:var(--panel)}
+/* Persistent cat buttons on canvas */
+.catbtns{position:absolute;bottom:44px;right:12px;display:flex;flex-direction:column;gap:6px;z-index:10}
+.editbtns{position:absolute;bottom:44px;left:12px;display:flex;flex-direction:column;gap:6px;z-index:10}
+.catbtn{padding:7px 12px;border:1.5px solid var(--border);border-radius:20px;background:rgba(250,247,242,.92);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;touch-action:manipulation;white-space:nowrap}
+.catbtn:hover,.catbtn:active{background:var(--abg);border-color:var(--accent)}
+.catbtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.catbtn.danger:hover,.catbtn.danger:active{background:#fde8e8;border-color:#c04040;color:#c04040}
 
 /* ── MOBILE BOTTOM PANEL ── */
 .mobile-bottom{display:none;flex-direction:column;background:var(--panel);border-top:1px solid var(--border);flex-shrink:0;z-index:20}
@@ -88,7 +95,7 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
 <header>
   <svg width="16" height="16" viewBox="0 0 16 16"><rect x="1" y="7" width="14" height="8" rx="1.5" fill="#c8944a"/><path d="M4 2L8 0.5L12 2V7H4Z" fill="#c8944a" stroke="#906030" stroke-width=".8"/></svg>
   <h1>Winston's House Builder</h1>
-  <span class="subtitle">floor furniture · wall furniture · Winston explores it all</span>
+  <span class="subtitle">Use wall + floor furniture to build my crib</span>
   <span class="badge" id="cnt">0 pieces</span>
 </header>
 
@@ -106,24 +113,10 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
       <div id="pg-wall" class="pgrid"></div>
     </div>
 
-    <div class="sec">
-      <div class="slabel">🐱 Winston &amp; friends</div>
-      <button class="abtn" id="btn-winston" onclick="toggleCat('winston')" style="width:100%;justify-content:center;font-weight:500">Add Winston</button>
-      <button class="abtn" id="btn-griffey" onclick="toggleCat('griffey')" style="width:100%;justify-content:center;font-weight:500;margin-top:4px">Add Griffey</button>
-      <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6">Add one or both cats — they'll explore together.</div>
-    </div>
-
-    <div class="sec">
-      <div class="slabel">Edit</div>
-      <button class="abtn" onclick="undoLast()">↩ Undo</button>
-      <button class="abtn danger" onclick="clearAll()">✕ Clear all</button>
-    </div>
-
     <div class="sec" style="flex:1">
       <div class="slabel">Tips</div>
       <div style="font-size:10.5px;color:var(--muted);line-height:1.75">
         Hover over the <b>floor</b> or <b>back wall</b> to place.<br><br>
-        Boxes get tunnel holes when touching.<br><br>
         Drag to orbit · Scroll to zoom
       </div>
     </div>
@@ -138,27 +131,9 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
       <button class="mob-tab" id="mtab-wall" onclick="mobTab('wall')">
         <span class="tab-icon">🧱</span>WALL
       </button>
-      <button class="mob-tab" id="mtab-winston" onclick="mobTab('winston')">
-        <span class="tab-icon">🐱</span>FRIENDS
-      </button>
-      <button class="mob-tab" id="mtab-edit" onclick="mobTab('edit')">
-        <span class="tab-icon">✏️</span>EDIT
-      </button>
     </div>
     <div class="mob-panel on" id="mpanel-floor"></div>
     <div class="mob-panel" id="mpanel-wall"></div>
-    <div class="mob-panel" id="mpanel-winston">
-      <div style="padding:4px 0;width:100%;display:flex;flex-direction:column;gap:6px">
-        <button class="mob-abtn primary" id="mob-btn-winston" onclick="toggleCat('winston')">🐱 Add Winston</button>
-        <button class="mob-abtn primary" id="mob-btn-griffey" onclick="toggleCat('griffey')">🐱 Add Griffey</button>
-      </div>
-    </div>
-    <div class="mob-panel" id="mpanel-edit">
-      <div style="display:flex;gap:8px;width:100%;padding:4px 0">
-        <button class="mob-abtn" onclick="undoLast()" style="flex:1">↩ Undo</button>
-        <button class="mob-abtn danger" onclick="clearAll()" style="flex:1">✕ Clear all</button>
-      </div>
-    </div>
   </div>
 
   <div class="canvas-area">
@@ -177,10 +152,20 @@ h1{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
       </div>
       <div class="crow" style="margin-top:2px">
         <div class="cbtn" onclick="zc(-1.5)">+</div>
-        <div class="cbtn" onclick="zc(1.5)">−</div>
+        <div class="cbtn" onclick="zc(1.5)">-</div>
       </div>
     </div>
     <div class="hintbar" id="hint">Select a piece and hover to preview</div>
+    <!-- Edit buttons bottom-left -->
+    <div class="editbtns">
+      <button class="catbtn" onclick="undoLast()">↩ Undo</button>
+      <button class="catbtn danger" onclick="clearAll()">✕ Clear</button>
+    </div>
+    <!-- Cat buttons bottom-right -->
+    <div class="catbtns" id="catbtns">
+      <button class="catbtn" id="canvas-btn-winston" onclick="toggleCat('winston')">🐱 Winston</button>
+      <button class="catbtn" id="canvas-btn-griffey" onclick="toggleCat('griffey')">🐈 Griffey</button>
+    </div>
   </div>
 </div>
 
@@ -214,6 +199,7 @@ const WALL_PIECES = [
   {id:'w_post',    name:'Scratcher',  type:'wall', w:0.5, h:2,   d:0.5},
   {id:'w_ladder',  name:'Bridge',     type:'wall', w:3,   h:0.5, d:0.5},
   {id:'w_hammock', name:'Hammock',    type:'wall', w:1.2, h:1.2, d:1.2},
+  {id:'w_window',  name:'Window',     type:'wall', w:2,   h:1.5, d:0.15},
 ];
 
 const BOX_IDS  = new Set(FLOOR_PIECES.map(p=>p.id));
@@ -410,6 +396,7 @@ function buildFloorBox(piece, adj, isGhost){
 // Mounted on back wall (z=0). Sticks out toward camera.
 // ═══════════════════════════════════════════════════════════
 function buildWallPiece(piece, isGhost){
+  if(piece.id==='w_window') return buildWindow(piece, isGhost);
   const g = new THREE.Group();
   const {w,h,d} = piece;
   const op = isGhost ? 0.3 : 1;
@@ -614,6 +601,222 @@ function buildWallPiece(piece, isGhost){
   if(isGhost){
     g.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w,h,d)),
       new THREE.LineBasicMaterial({color:0xb86e30,transparent:true,opacity:.75})));
+  }
+  return g;
+}
+
+// ── WINDOW SCENE TEXTURE ──
+// Painted onto a canvas: blue sky, fluffy clouds, a tree, two birds on the sill.
+// ── ANIMATED WINDOW TEXTURE ──
+const _winCanvas = document.createElement('canvas');
+_winCanvas.width=256; _winCanvas.height=192;
+let _winTex = null;
+let _winT = 0;
+
+// Birds: sit on sill, then fly a looping arc across the sky and land back
+const W2=256, H2=192;
+const _birds = [
+  {x:55,  y:H2-14, vx:0, vy:0, phase:0, onSill:true, flip:false, waitT:80,  sillX:55},
+  {x:192, y:H2-14, vx:0, vy:0, phase:0, onSill:true, flip:true,  waitT:200, sillX:192},
+];
+
+function tickWindowAnim(){
+  _winT += 0.016; // faster time base
+
+  _birds.forEach(b=>{
+    if(b.onSill){
+      b.waitT--;
+      if(b.waitT<=0){
+        b.onSill = false;
+        // Launch: fast horizontal with upward kick
+        const dir = b.flip ? -1 : 1;
+        b.vx = dir * (2.5 + Math.random());
+        b.vy = -(2.0 + Math.random()*1.5);
+        b.phase = 0;
+        b.flip = !b.flip; // face direction of travel
+      }
+    } else {
+      b.phase += 0.45; // fast wing flap
+      b.x += b.vx;
+      b.y += b.vy;
+      b.vy += 0.06;  // stronger gravity so arc is visible
+      // Subtle direction changes mid-flight
+      b.vx += (Math.random()-0.5)*0.15;
+      b.vx = Math.max(-4, Math.min(4, b.vx));
+      b.vy = Math.max(-4, Math.min(3, b.vy));
+      // Face direction of travel
+      b.flip = b.vx < 0;
+      // Land when back near sill height and slowing down
+      if(b.y >= H2-16 && Math.abs(b.vy) < 2){
+        b.onSill = true;
+        b.x = b.sillX + (Math.random()-0.5)*20;
+        b.x = Math.max(20, Math.min(W2-20, b.x));
+        b.y = H2-14;
+        b.vx=0; b.vy=0;
+        b.waitT = 120 + Math.floor(Math.random()*250);
+        b.flip = b.x > W2/2; // face centre
+      }
+      // Wrap horizontally so they come back from the other side
+      if(b.x < -20) b.x = W2+10;
+      if(b.x > W2+20) b.x = -10;
+      // Bounce gently off top
+      if(b.y < 8){ b.y=8; b.vy = Math.abs(b.vy)*0.5; }
+    }
+  });
+}
+
+function drawWindowScene(){
+  const W=256, H=192;
+  const c=_winCanvas.getContext('2d');
+  c.clearRect(0,0,W,H);
+
+  // Sky
+  const sky=c.createLinearGradient(0,0,0,H*0.75);
+  sky.addColorStop(0,'#7ec8e3'); sky.addColorStop(1,'#d4eef7');
+  c.fillStyle=sky; c.fillRect(0,0,W,H*0.75);
+
+  // Ground
+  c.fillStyle='#8ab870'; c.fillRect(0,H*0.72,W,H*0.28);
+  c.fillStyle='#a8d090'; c.fillRect(0,H*0.72,W,8);
+
+  // Animated clouds — drift slowly right, wrap around
+  function cloud(x,y,s){
+    c.fillStyle='rgba(255,255,255,0.92)';
+    [[0,0,28],[22,4,22],[44,0,26],[-18,4,20]].forEach(([dx,dy,r])=>{
+      c.beginPath(); c.arc(x+dx*s,y+dy*s,r*s,0,Math.PI*2); c.fill();
+    });
+  }
+  const ct = _winT;
+  cloud(((60 + ct*8)  % (W+80))-40, 35, 0.5);
+  cloud(((170+ ct*5)  % (W+80))-40, 25, 0.42);
+  cloud(((120+ ct*11) % (W+80))-40, 55, 0.35);
+
+  // Distant hills
+  c.fillStyle='#90b878';
+  c.beginPath(); c.ellipse(40,H*0.74,60,22,0,0,Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(200,H*0.73,50,18,0,0,Math.PI*2); c.fill();
+
+  // Tree
+  c.fillStyle='#7a5030';
+  c.fillRect(W*0.72-8, H*0.42, 16, H*0.3);
+  c.fillStyle='#3a7830';
+  [[0,0,36],[28,-10,28],[-28,-10,28],[14,20,24],[-14,20,24],[0,-24,30]].forEach(([dx,dy,r])=>{
+    c.beginPath(); c.arc(W*0.72+dx, H*0.38+dy, r, 0, Math.PI*2); c.fill();
+  });
+  c.fillStyle='#4a9840';
+  [[0,-8,24],[20,-4,20],[-20,-4,20]].forEach(([dx,dy,r])=>{
+    c.beginPath(); c.arc(W*0.72+dx, H*0.38+dy, r, 0, Math.PI*2); c.fill();
+  });
+
+  // Birds
+  function drawBird(b){
+    const {x,y,flip,onSill,phase} = b;
+    c.save(); c.translate(x,y);
+    if(flip) c.scale(-1,1);
+    c.fillStyle='#2a1808';
+    // Wing flap when flying
+    const wingA = onSill ? 0 : Math.sin(phase)*0.5;
+    // Body
+    c.beginPath(); c.ellipse(0,0,7,4.5,0.2,0,Math.PI*2); c.fill();
+    // Head
+    c.beginPath(); c.arc(6,-3,3.5,0,Math.PI*2); c.fill();
+    // Beak
+    c.beginPath(); c.moveTo(9,-3); c.lineTo(13,-2); c.lineTo(9,-1); c.fill();
+    // Tail
+    c.beginPath(); c.moveTo(-7,0); c.lineTo(-13,3); c.lineTo(-13,-1); c.fill();
+    // Wing (animated when flying)
+    if(!onSill){
+      c.beginPath();
+      c.ellipse(-1, wingA*8-2, 6, 3, wingA-0.3, 0, Math.PI*2);
+      c.fill();
+    }
+    // Eye
+    c.fillStyle='white';
+    c.beginPath(); c.arc(7,-4,1,0,Math.PI*2); c.fill();
+    c.restore();
+  }
+  _birds.forEach(drawBird);
+
+  // Sill
+  c.fillStyle='#c8904a'; c.fillRect(0,H-8,W,8);
+  c.fillStyle='#a06828'; c.fillRect(0,H-9,W,2);
+}
+
+function windowTex(){
+  if(!_winTex){
+    drawWindowScene();
+    _winTex = new THREE.CanvasTexture(_winCanvas);
+  }
+  return _winTex;
+}
+
+function tickWindow(){
+  // Only update if any window is placed
+  const hasWindow = placed.some(it=>it.piece.id==='w_window');
+  if(!hasWindow || !_winTex) return;
+  tickWindowAnim();
+  drawWindowScene();
+  _winTex.needsUpdate = true;
+}
+
+// ── WINDOW BUILDER ──
+function buildWindow(piece, isGhost){
+  const g = new THREE.Group();
+  const {w,h,d} = piece;
+  const op = isGhost ? 0.35 : 1;
+  const frameM = new THREE.MeshLambertMaterial({color:0xf0e8d0, transparent:op<1, opacity:op}); // cream frame
+  const frameEdgeM = new THREE.MeshLambertMaterial({color:0xc0a060, transparent:op<1, opacity:op});
+  const glassM = new THREE.MeshBasicMaterial({
+    map: isGhost ? null : windowTex(),
+    color: isGhost ? 0x88ccee : 0xffffff,
+    transparent: true, opacity: isGhost ? 0.4 : 1,
+    side: THREE.DoubleSide,
+  });
+
+  // Outer frame — box with hollow centre (4 strips)
+  const fw = 0.1; // frame width
+  // Top bar
+  const topBar = new THREE.Mesh(new THREE.BoxGeometry(w, fw, d), frameM);
+  topBar.position.set(0, h/2-fw/2, 0); g.add(topBar);
+  // Bottom sill — slightly thicker and projects outward
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(w+0.1, fw*1.4, d+0.15), frameEdgeM);
+  sill.position.set(0, -h/2+fw/2, 0.07);
+  sill.castShadow=true; g.add(sill);
+  // Left bar
+  const leftBar = new THREE.Mesh(new THREE.BoxGeometry(fw, h, d), frameM);
+  leftBar.position.set(-w/2+fw/2, 0, 0); g.add(leftBar);
+  // Right bar
+  const rightBar = new THREE.Mesh(new THREE.BoxGeometry(fw, h, d), frameM);
+  rightBar.position.set(w/2-fw/2, 0, 0); g.add(rightBar);
+
+  // Window pane — scene texture
+  const paneW = w - fw*2;
+  const paneH = h - fw*2;
+  const pane = new THREE.Mesh(new THREE.PlaneGeometry(paneW, paneH), glassM);
+  pane.position.set(0, fw*0.3, d/2+0.001);
+  g.add(pane);
+
+  // Cross divider (classic window cross)
+  if(!isGhost){
+    const barM = new THREE.MeshLambertMaterial({color:0xe8ddc0});
+    const hBar = new THREE.Mesh(new THREE.BoxGeometry(paneW, fw*0.6, d*0.5), barM);
+    hBar.position.set(0, 0, d/2+0.002);
+    g.add(hBar);
+    const vBar = new THREE.Mesh(new THREE.BoxGeometry(fw*0.6, paneH, d*0.5), barM);
+    vBar.position.set(0, fw*0.3, d/2+0.002);
+    g.add(vBar);
+
+    // Wall mount brackets
+    for(const sx of [-w/2+0.15, w/2-0.15]){
+      const brk = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.14), frameEdgeM);
+      brk.position.set(sx, 0, -d/2-0.04);
+      g.add(brk);
+    }
+  }
+
+  if(isGhost){
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w,h,d)),
+      new THREE.LineBasicMaterial({color:0xb86e30,transparent:true,opacity:.7})));
   }
   return g;
 }
@@ -1381,15 +1584,20 @@ function toggleCat(name){
 }
 
 function updateCatButtons(){
+  const emojis = {winston:'🐱', griffey:'🐈'};
   ['winston','griffey'].forEach(name=>{
     const active = cats[name].active;
-    ['','mob-'].forEach(pre=>{
-      const btn = document.getElementById(pre+'btn-'+name);
-      if(!btn) return;
-      const label = name[0].toUpperCase()+name.slice(1);
-      btn.textContent = (active?'Remove ':'Add ')+label;
-      btn.style.opacity = active ? '0.7' : '1';
-    });
+    const label = name[0].toUpperCase()+name.slice(1);
+    const emoji = emojis[name];
+    // Sidebar button (desktop only — may not exist)
+    const sBtn = document.getElementById('btn-'+name);
+    if(sBtn){ sBtn.textContent=(active?'Remove ':'Add ')+label; sBtn.style.opacity=active?'0.7':'1'; }
+    // Canvas floating button
+    const cbtn = document.getElementById('canvas-btn-'+name);
+    if(cbtn){
+      cbtn.textContent = emoji+' '+(active?'Remove ':'Add ')+label;
+      cbtn.classList.toggle('active', active);
+    }
   });
 }
 
@@ -1842,6 +2050,7 @@ function init(){
 function loop(){
   requestAnimationFrame(loop);
   tickWinston();
+  tickWindow();
   // Gentle ghost float
   if(ghost) ghost.position.y=ghostTarget.y+Math.sin(Date.now()*.003)*.04;
   renderer.render(scene,camera);
@@ -1890,6 +2099,19 @@ function thumbWall(p){
             <path d="M11,16 Q23,30 35,16" fill="none" stroke="#b8aa98" stroke-width="1"/>
             <rect x="9" y="17" width="4" height="3" rx="1" fill="#8a5820"/>
             <rect x="33" y="17" width="4" height="3" rx="1" fill="#8a5820"/>`;
+  }
+  if(p.id==='w_window'){
+    return `
+      <rect x="5" y="4" width="36" height="26" fill="#7ec8e3" rx="1"/>
+      <rect x="5" y="18" width="36" height="12" fill="#8ab870"/>
+      <rect x="5" y="4" width="36" height="26" fill="none" stroke="#c8a860" stroke-width="2.5" rx="1"/>
+      <line x1="5" y1="17" x2="41" y2="17" stroke="#e8ddc0" stroke-width="1.5"/>
+      <line x1="23" y1="4" x2="23" y2="30" stroke="#e8ddc0" stroke-width="1.5"/>
+      <ellipse cx="29" cy="9" rx="5" ry="3.5" fill="rgba(255,255,255,0.8)"/>
+      <path d="M10,29 q2,-3 4,0" fill="none" stroke="#2a1808" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M32,28 q2,-3 4,0" fill="none" stroke="#2a1808" stroke-width="1.5" stroke-linecap="round"/>
+      <rect x="4" y="28" width="38" height="3" fill="#c8904a" rx="0.5"/>
+    `;
   }
   // shelf / wide shelf
   return `<rect x="${ox}" y="${oy-ph}" width="${pw}" height="${ph}" fill="#d4a050" stroke="#7a4c1c" stroke-width="1" rx="1"/>
@@ -1952,7 +2174,7 @@ function makeCard(p){
 }
 
 function mobTab(name){
-  ['floor','wall','winston','edit'].forEach(t=>{
+  ['floor','wall'].forEach(t=>{
     document.getElementById('mtab-'+t).classList.toggle('on',t===name);
     document.getElementById('mpanel-'+t).classList.toggle('on',t===name);
   });
