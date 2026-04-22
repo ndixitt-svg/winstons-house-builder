@@ -2613,13 +2613,14 @@ function showBubble(name, text, duration=2800){
 
 function pickPhrase(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
-// Project a 3D world position to 2D screen coords
+// Project a 3D world position to 2D coords relative to .canvas-area
 function worldToScreen(pos){
   const v = pos.clone().project(camera);
-  const rect = renderer.domElement.getBoundingClientRect();
+  const canvasRect = renderer.domElement.getBoundingClientRect();
+  const areaRect   = document.querySelector('.canvas-area').getBoundingClientRect();
   return {
-    x: (v.x * 0.5 + 0.5) * rect.width  + rect.left,
-    y: (-v.y * 0.5 + 0.5) * rect.height + rect.top,
+    x: (v.x * 0.5 + 0.5) * canvasRect.width  + (canvasRect.left - areaRect.left),
+    y: (-v.y * 0.5 + 0.5) * canvasRect.height + (canvasRect.top  - areaRect.top),
   };
 }
 
